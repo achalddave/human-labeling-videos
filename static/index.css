@@ -1,0 +1,24 @@
+input[type='checkbox'] {
+  display: none;
+}
+
+.label-button {
+  display: inline-block;
+  padding: 10px;
+  margin: 5px;
+  background: #eeeeee;
+  text-align: center;
+}
+
+.label-button:hover {
+  cursor: pointer;
+}
+
+input[type='checkbox']:checked + .label-button {
+  background: green;
+  color: white;
+}
+
+.to-label {
+  box-shadow: 0px 0px 4px 2px green;
+}

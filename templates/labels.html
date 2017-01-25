@@ -1,0 +1,6 @@
+{% for label_id, label_name in labels %}
+<input name='{{video}}-{{frame}}-{{label_id}}' id='{{video}}-{{frame}}-{{label_id}}-id' type='checkbox'>
+<label class='label-button' for='{{video}}-{{frame}}-{{label_id}}-id'>
+  {{label_name}}
+</label>
+{% endfor %}

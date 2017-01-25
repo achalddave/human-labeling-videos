@@ -1,3 +1,6 @@
 [submodule "video_util"]
 	path = video_util
 	url = git@github.com:achalddave/video-tools.git
+[submodule "data_loaders/thumos_util"]
+	path = data_loaders/thumos_util
+	url = git@github.com:achalddave/thumos-util.git

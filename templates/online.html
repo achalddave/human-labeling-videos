@@ -1,0 +1,9 @@
+<div id='{{video}}-{{frame}}'>
+  {% for frame in pre_context %}
+  <img class='context precontext' src={{frame}} />
+  {% endfor %}
+  <img class='to-label' src={{frame_path}} />
+  <div class='labels'>
+    {% include 'labels.html' %}
+  </div>
+</div>
