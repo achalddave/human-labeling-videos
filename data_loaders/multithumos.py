@@ -37,8 +37,12 @@ class MultiThumosDataLoader(DataLoader):
         self.video_frame_info = parsing.parse_frame_info_file(
             video_frames_info)
         for filename, (fps, num_frames) in self.video_frame_info.items():
-            self.video_frame_info[filename] = (self.frames_per_second, floor(
-                num_frames / fps * self.frames_per_second))
+            if filename not in self.annotations:
+                del self.video_frame_info[filename]
+            else:
+                self.video_frame_info[filename] = (
+                    self.frames_per_second, floor(num_frames / fps *
+                                                  self.frames_per_second))
 
         self.background_intervals = {}
         for filename, file_annotations in self.annotations.items():
