@@ -16,7 +16,11 @@ app.config.from_pyfile(os.environ['FLASK_CONFIG'])
 data_loader = data_loaders.get_data_loader(app.config['DATA_LOADER'])(
     **app.config['DATA_LOADER_CONFIG'])
 
-TEMPLATES = ['single_frame', 'online', 'context']
+TEMPLATES = ['single_frame', 'online_partial', 'online', 'context', 'context_partial']
+
+@app.route('/')
+def index():
+    return render_template('index.html', templates=TEMPLATES)
 
 @app.route('/<template>')
 def labeler(template):
@@ -39,7 +43,7 @@ def labeler(template):
             frame_path='video/%s/%s' % (sample.filename, sample.frame),
             video=sample.filename,
             frame=sample.frame)
-    return render_template('index.html', form=form_template, template=template)
+    return render_template('labeler.html', form=form_template, template=template)
 
 
 @app.route('/submit_<template>', methods=['POST'])
