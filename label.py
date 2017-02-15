@@ -20,6 +20,7 @@ TEMPLATES = ['single_frame', 'online', 'context']
 def labeler(template):
     samples = data_loader.sample(
         num_samples_per_label=app.config['NUM_SAMPLES_PER_LABEL'],
+        num_background_samples=app.config['NUM_BACKGROUND_SAMPLES'],
         seed=app.config['SEED'],
         pre_context=app.config['PRE_CONTEXT'],
         post_context=app.config['POST_CONTEXT'])

@@ -10,6 +10,7 @@ class DataLoader(object):
     @abstractmethod
     def sample(self,
                num_samples_per_label,
+               num_background_samples,
                seed=None,
                pre_context=0,
                post_context=0):
