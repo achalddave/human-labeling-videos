@@ -1,6 +1,8 @@
+from __future__ import division
+
 import json
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 from os import path
 
@@ -68,11 +70,65 @@ def submit(template):
             'frame': sample.frame,
             'groundtruth': [label_name_to_id[x] for x in sample.labels],
             'predictions': predictions})
-    output_file = '%s-%s-%s' % (app.config['EXPERIMENT_PREFIX'], template,
-                                datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+    output_file = '%s/%s-%s-%s-seed-%s' % (
+        app.config['RESULTS_DIR'], app.config['EXPERIMENT_PREFIX'], template,
+        datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), app.config['SEED'])
     with open(output_file, 'w') as f:
         json.dump(output, f)
     return render_template('form_response.html', output_file=output_file)
+
+
+@app.route('/view_results/<results_file>')
+def results(results_file):
+    with open('%s/%s' % (app.config['RESULTS_DIR'], results_file)) as f:
+        results = json.load(f)
+
+    label_names = data_loader.labels()
+    correctly_predicted = Counter()
+    total_predicted = Counter()
+    total_true = Counter()
+    results_view = []
+    for labeled_frame in results:
+        true_labels = set(label_names[x] for x in labeled_frame['groundtruth'])
+        predicted_labels = set(label_names[x]
+                               for x in labeled_frame['predictions'])
+
+        true_positive = list(true_labels & predicted_labels)
+        false_positive = list(predicted_labels - true_labels)
+        false_negative = list(true_labels - predicted_labels)
+        results_view.append({
+            'path': '/video/%s/%s' % (labeled_frame['filename'], labeled_frame[
+                'frame']),
+            'true_positive': true_positive,
+            'false_positive': false_positive,
+            'false_negative': false_negative
+        })
+
+        for label in true_labels:
+            correctly_predicted[label] += label in predicted_labels
+            total_true[label] += 1
+        for label in predicted_labels:
+            total_predicted[label] += 1
+
+    precisions = []
+    recalls = []
+    for label in sorted(label_names.values()):
+        precisions.append(100 * correctly_predicted[label] / total_predicted[
+            label] if total_predicted[label] != 0 else 0)
+        recalls.append(100 * correctly_predicted[label] / total_true[label])
+    accuracy = 100 * sum(correctly_predicted.values()) / sum(total_true.values(
+    ))
+    mean_precision = sum(precisions) / len(precisions)
+    mean_recall = sum(recalls) / len(recalls)
+    return render_template(
+        'results.html',
+        precision_recalls=zip(
+            sorted(label_names.values()), precisions, recalls),
+        precision=mean_precision,
+        recall=mean_recall,
+        results=results_view,
+        accuracy=accuracy)
+
 
 @app.route('/video/<video_name>/<frame_number>')
 def frame(video_name, frame_number):

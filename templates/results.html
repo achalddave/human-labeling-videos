@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<head>
+  <link rel='stylesheet' type='text/css' href='/static/results.css'>
+</head>
+<body>
+  <h1>Mean precision: {{'%0.2f' % precision}}%</h1>
+  <h1>Mean recall: {{'%0.2f' % recall}}%</h1>
+  <h1>Accuracy: {{'%0.2f' % accuracy}}%</h1>
+  <table>
+    <tr>
+      <th>Label</th>
+      <th>Precision</th>
+      <th>Recall</th>
+    </tr>
+    {% for label, precision, recall in precision_recalls %}
+    <tr>
+      <td>{{label}}</td>
+      <td>{{'%0.2f' % precision}}%</td>
+      <td>{{'%0.2f' % recall}}%</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  {% for result in results %}
+  {% if result.false_positive or result.false_negative %}
+  <div class='result-container result-incorrect'>
+  {% else %}
+  <div class='result-container result-correct'>
+  {% endif %}
+  <img src={{result.path}} />
+  <div class='predictions-container'>
+    <b>Predictions</b>
+  {% for true_positive in result.true_positive %}
+    <div class='true-positive'>{{true_positive}}</div>
+  {% endfor %}
+  {% for false_positive in result.false_positive %}
+    <div class='false-positive'>{{false_positive}}</div>
+  {% endfor %}
+  </div>
+
+  <div class='false-negative-container'>
+  <b>Missed groundtruth</b>
+  {% for false_negative in result.false_negative %}
+    <div class='false-negative'>{{false_negative}}</div>
+  {% endfor %}
+  </div>
+  </div>
+  {% endfor %}
+</body>
+</html>
