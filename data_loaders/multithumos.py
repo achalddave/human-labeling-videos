@@ -62,7 +62,6 @@ class MultiThumosDataLoader(DataLoader):
                post_context=0):
         if seed is not None:
             self.random.seed(seed)
-        # TODO: Sample background data if deemed necessary.
         # TODO: Only do this once when the class is created. Only filter for
         # context validity in sample.
         label_to_annotations = defaultdict(list)
