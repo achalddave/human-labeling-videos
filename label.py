@@ -46,19 +46,14 @@ def submit(template):
     # for labeling was generated.
     samples = data_loader.sample(
         num_samples_per_label=app.config['NUM_SAMPLES_PER_LABEL'],
+        num_background_samples=app.config['NUM_BACKGROUND_SAMPLES'],
         seed=app.config['SEED'],
         pre_context=app.config['PRE_CONTEXT'],
         post_context=app.config['POST_CONTEXT'])
     labels = data_loader.labels()
     responses = defaultdict(lambda: [''], request.form)
-    # label_to_id = {label: label_id for label_id, label in labels.items()}
     output = []
     for sample in samples:
-        if sample.frame == 267 and sample.filename == 'video_test_0000549':
-            print(sample)
-            print({x: y
-                   for x, y in responses.items() if x.startswith(sample.filename)
-                   })
         predictions = [label_id
                        for label_id in labels
                        if responses['%s-%s-%s' % (
