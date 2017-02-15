@@ -20,12 +20,14 @@ class MultiThumosDataLoader(DataLoader):
         self.random = Random()
 
         self.annotations = annotation.load_annotations_json(annotations_json)
-        # Transform annotations to be in the right frame rate, remove
-        # annotations for labels not in the label_map.
-        convert_annotation = lambda x: Annotation(
+
+        def convert_annotation(x):
+            """Transform annotations to be in the right frame rate."""
+            return Annotation(
                 x.filename, ceil(x.start_seconds * self.frames_per_second),
                 floor(x.end_seconds * self.frames_per_second), x.start_seconds,
                 x.end_seconds, self.frames_per_second, x.category)
+
         for filename, file_annotations in self.annotations.items():
             self.annotations[filename] = [
                 convert_annotation(x)
