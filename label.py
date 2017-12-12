@@ -65,12 +65,14 @@ def submit(template):
             'frame': sample.frame,
             'groundtruth': [label_name_to_id[x] for x in sample.labels],
             'predictions': predictions})
-    output_file = '%s/%s-%s-%s-seed-%s' % (
-        app.config['RESULTS_DIR'], app.config['EXPERIMENT_PREFIX'], template,
-        datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), app.config['SEED'])
+    results_filename = '%s-%s-%s-seed-%s' % (
+        app.config['EXPERIMENT_PREFIX'], template,
+        datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), app.config['DATA_LOADER_SAMPLE_ARGS']['seed'])
+    output_file = path.join(app.config['RESULTS_DIR'], results_filename)
     with open(output_file, 'w') as f:
         json.dump(output, f)
-    return render_template('form_response.html', output_file=output_file)
+    link = path.join('view_results', results_filename)
+    return render_template('form_response.html', output_file=output_file, link=link)
 
 
 @app.route('/view_results/<results_file>')
