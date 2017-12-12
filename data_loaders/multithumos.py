@@ -5,10 +5,11 @@ from collections import defaultdict
 from math import floor, ceil
 
 from intervaltree import Interval, IntervalTree
-from data_loader import DataLoader, FrameSample
-from thumos_util import parsing
-from thumos_util.video_tools.util import annotation
-from thumos_util.video_tools.util.annotation import Annotation
+from .data_loader import DataLoader, FrameSample
+from .thumos_util import parsing
+from .thumos_util.video_tools.util import annotation
+from .thumos_util.video_tools.util.annotation import Annotation
+
 
 class MultiThumosDataLoader(DataLoader):
     def __init__(self, frames_dir, frames_per_second, annotations_json,
