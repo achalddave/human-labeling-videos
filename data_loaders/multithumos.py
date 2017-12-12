@@ -16,7 +16,7 @@ class MultiThumosDataLoader(DataLoader):
                  video_frames_info, class_list_path, ignore_negative_videos=True):
         # TODO (URGENT): Update to handle frames per second.
         self.frames_dir = frames_dir
-        self.frames_per_second = frames_per_second
+        self._frames_per_second = frames_per_second
         self.label_map = parsing.load_class_mapping(class_list_path)
         self.random = Random()
 
@@ -25,9 +25,9 @@ class MultiThumosDataLoader(DataLoader):
         def convert_annotation(x):
             """Transform annotations to be in the right frame rate."""
             return Annotation(
-                x.filename, ceil(x.start_seconds * self.frames_per_second),
-                floor(x.end_seconds * self.frames_per_second), x.start_seconds,
-                x.end_seconds, self.frames_per_second, x.category)
+                x.filename, ceil(x.start_seconds * self._frames_per_second),
+                floor(x.end_seconds * self._frames_per_second), x.start_seconds,
+                x.end_seconds, self._frames_per_second, x.category)
 
         for filename in list(self.annotations.keys()):
             self.annotations[filename] = [
@@ -47,8 +47,8 @@ class MultiThumosDataLoader(DataLoader):
                 del self.video_frame_info[filename]
             else:
                 self.video_frame_info[filename] = (
-                    self.frames_per_second,
-                    int(floor(num_frames / fps * self.frames_per_second)))
+                    self._frames_per_second,
+                    int(floor(num_frames / fps * self._frames_per_second)))
 
         self.background_intervals = {}
         for filename, file_annotations in self.annotations.items():
@@ -63,6 +63,9 @@ class MultiThumosDataLoader(DataLoader):
 
     def labels(self):
         return self.label_map
+
+    def frames_per_second(self):
+        return self._frames_per_second
 
     def sample_balanced(self,
                         num_samples_per_label,

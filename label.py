@@ -2,12 +2,14 @@ from __future__ import division
 
 import json
 import os
+import tempfile
 from collections import Counter, defaultdict
 from datetime import datetime
 from os import path
 
 import flask
 from flask import Flask, render_template, request
+from moviepy.editor import ImageSequenceClip
 
 import data_loaders
 from data_loaders.thumos_util.evaluation import compute_average_precision
@@ -147,6 +149,31 @@ def frame(video_name, frame_number):
     frame_dir, frame_filename = data_loader._frame_dir_name(video_name,
                                                             int(frame_number))
     return flask.send_from_directory(frame_dir, frame_filename)
+
+
+@app.route('/video/<video_name>/<frame_start>-<frame_end>')
+def frame_range(video_name, frame_start, frame_end):
+    f = tempfile.NamedTemporaryFile(
+        suffix='{}-{}-{}.mp4'.format(video_name, frame_start, frame_end))
+
+    frame_filenames = []
+    for i in range(int(frame_start), int(frame_end) + 1):
+        frame_dir, frame_filename = data_loader._frame_dir_name(video_name, i)
+        frame_filenames.append(os.path.join(frame_dir, frame_filename))
+    print(frame_filenames)
+
+    # TODO(achald): Allow FPS to be set from config.
+    clip = ImageSequenceClip(
+        frame_filenames, fps=data_loader.frames_per_second())
+    clip.write_videofile(f.name)
+
+    @flask.after_this_request
+    def cleanup(response):
+        f.close()
+        return response
+
+    return flask.send_file(f.name)
+
 
 if __name__ == '__main__':
     app.run()
