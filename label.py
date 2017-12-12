@@ -24,12 +24,7 @@ def index():
 
 @app.route('/<template>')
 def labeler(template):
-    samples = data_loader.sample(
-        num_samples_per_label=app.config['NUM_SAMPLES_PER_LABEL'],
-        num_background_samples=app.config['NUM_BACKGROUND_SAMPLES'],
-        seed=app.config['SEED'],
-        pre_context=app.config['PRE_CONTEXT'],
-        post_context=app.config['POST_CONTEXT'])
+    samples = data_loader.sample(**app.config['DATA_LOADER_SAMPLE_ARGS'])
     form_template = ''
     labels = data_loader.labels()
     for sample in samples:
@@ -50,12 +45,7 @@ def labeler(template):
 def submit(template):
     # Since we use the same seed, we will get the same samples as when the form
     # for labeling was generated.
-    samples = data_loader.sample(
-        num_samples_per_label=app.config['NUM_SAMPLES_PER_LABEL'],
-        num_background_samples=app.config['NUM_BACKGROUND_SAMPLES'],
-        seed=app.config['SEED'],
-        pre_context=app.config['PRE_CONTEXT'],
-        post_context=app.config['POST_CONTEXT'])
+    samples = data_loader.sample(**app.config['DATA_LOADER_SAMPLE_ARGS'])
     labels = data_loader.labels()
     responses = defaultdict(lambda: [''], request.form)
     output = []
