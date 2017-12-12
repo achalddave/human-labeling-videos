@@ -10,6 +10,7 @@ import flask
 from flask import Flask, render_template, request
 
 import data_loaders
+from data_loaders.thumos_util.evaluation import compute_average_precision
 
 app = Flask(__name__)
 app.config.from_pyfile(os.environ['FLASK_CONFIG'])
@@ -77,6 +78,8 @@ def results(results_file):
     with open('%s/%s' % (app.config['RESULTS_DIR'], results_file)) as f:
         results = json.load(f)
 
+    predictions = defaultdict(list)
+    groundtruth = defaultdict(list)
     label_names = data_loader.labels()
     correctly_predicted = Counter()
     total_predicted = Counter()
@@ -98,6 +101,10 @@ def results(results_file):
             'false_negative': false_negative
         })
 
+        for label in label_names.values():
+            groundtruth[label].append(1 if label in true_labels else 0)
+            predictions[label].append(1 if label in predicted_labels else 0)
+
         for label in true_labels:
             correctly_predicted[label] += label in predicted_labels
             total_true[label] += 1
@@ -106,10 +113,18 @@ def results(results_file):
 
     precisions = []
     recalls = []
+    avg_precisions = []
     for label in sorted(label_names.values()):
+        avg_precision = compute_average_precision(groundtruth[label],
+                                                  predictions[label])
+        print('Average precision (%s): %s' % (label, avg_precision))
+        avg_precisions.append(avg_precision)
+
         precisions.append(100 * correctly_predicted[label] / total_predicted[
             label] if total_predicted[label] != 0 else 0)
+
         recalls.append(100 * correctly_predicted[label] / total_true[label])
+    print("mAP: %s" % (sum(avg_precisions) / float(len(avg_precisions))))
     accuracy = 100 * sum(correctly_predicted.values()) / sum(total_true.values(
     ))
     mean_precision = sum(precisions) / len(precisions)
@@ -121,6 +136,7 @@ def results(results_file):
         precision=mean_precision,
         recall=mean_recall,
         results=results_view,
+        mean_ap=100.0*sum(avg_precisions)/float(len(avg_precisions)),
         accuracy=accuracy)
 
 
