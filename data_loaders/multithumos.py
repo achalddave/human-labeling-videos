@@ -39,7 +39,8 @@ class MultiThumosDataLoader(DataLoader):
         # Transform frame info to be in the right frame rate.
         self.video_frame_info = parsing.parse_frame_info_file(
             video_frames_info)
-        for filename, (fps, num_frames) in self.video_frame_info.items():
+        for filename in list(self.video_frame_info.keys()):
+            fps, num_frames = self.video_frame_info[filename]
             if filename not in self.annotations:
                 del self.video_frame_info[filename]
             else:
