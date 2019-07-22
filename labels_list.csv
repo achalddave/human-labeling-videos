@@ -1,0 +1,12 @@
+index,keyboard,name,description_short,description_long,color
+0,q,correct,"GT correct","Groundtruth is correct",green
+1,w,problematic,"Problematic frame","Frame is problematic",red
+2,e,incorrect,"GT incorrect","Groundtruth is incorrect",red
+3,r,dont know,"Don't know","Unclear if groundtruth is correct",orange
+4,a,similar,"Similar","Easy difference between anchor and pm-k",green
+5,s,dissimilar,"Dissimilar","Significant difference between anchor and pm-k",orange
+6,z,deformation,"Deformation","Object rotated or non-rigidly deformed",orange
+7,x,background-change,"BG change","Background changed drastically",orange
+8,c,occlusion-increased,"Occlusion change","Occlusion changed drastically",orange
+9,v,blur-increase,"Blur increased","Motion blur increased",orange
+10,b,bad-anchor,"Anchor is bad","Bad anchor, throw out all pm-k",red

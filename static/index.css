@@ -1,0 +1,83 @@
+input[type='checkbox'] {
+  display: none;
+}
+
+.image-label-container {
+  padding: 10px;
+  margin: 30px 0px;
+  text-align: center;
+  overflow: auto;
+  resize: vertical;
+  box-shadow: 0px 0px 5px 0px black;
+}
+
+.label-button {
+  display: inline-block;
+  padding: 10px;
+  margin: 5px;
+  background: #eeeeee;
+  text-align: center;
+}
+
+.label-button:hover {
+  cursor: pointer;
+}
+
+input[type='checkbox']:checked + .label-button {
+  background: green;
+  color: white;
+}
+
+.to-label-container {
+  max-height: 400px;
+  overflow: hidden;
+  resize: vertical;
+}
+
+.to-label {
+  box-shadow: 0px 0px 4px 2px green;
+}
+
+.playback-button {
+  display: inline-block;
+  width: 40px;
+  height: 30px;
+  border-bottom: solid 2px #ddd;
+  margin: 5px;
+  line-height: 30px;
+}
+
+.playback-button:hover {
+  cursor: pointer;
+  border-bottom: solid 2px black;
+}
+
+.playback-button-active {
+  border-bottom: solid 2px green;
+}
+
+.container-error {
+  box-shadow: 0px 0px 5px 4px #ee6666;
+}
+
+#error {
+  display: none;
+  text-align: center;
+  padding: 15px 5px;
+  background: #ee6666;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.notes {
+  display: block;
+  font-size: 1em;
+  padding: 10px;
+  width: 50%;
+  margin: 0 auto;
+}
+
+#submit {
+  margin: 10px auto;
+  display: block;
+}
