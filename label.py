@@ -1,10 +1,8 @@
 """Image labeler interface."""
 import collections
-import configparser
 import csv
 import json
 import os
-import sys
 import random
 from pathlib import Path
 
