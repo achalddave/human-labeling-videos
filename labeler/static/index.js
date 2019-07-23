@@ -28,12 +28,7 @@ $(function() {
   // var topSpace = 5;
   $('#preview').hide();
 
-  // HACK: Add new line before last two labels:
-  $('.labels').each(
-    (_, y) => $(y).find('input[type="checkbox"]').eq(4).before('<br/>'))
-  $('.labels').each(
-    (_, y) => $(y).find('input[type="checkbox"]').eq(6).before('<br/>'))
-  updateContainer($('.image-label-container').eq(0));
+  updateContainer($('.data-label-container').eq(0));
 
   $('.labels').focus(function() {
     if (!$(this).parent().hasClass('active')) {
@@ -46,7 +41,7 @@ $(function() {
       return;
     }
     if (event.key == 'j' || event.key == 'k') {
-      var topOffsets = $('.image-label-container').map(function() {
+      var topOffsets = $('.data-label-container').map(function() {
         return {
           'object': $(this),
           'offset': $(this).offset().top - $(window).scrollTop()
@@ -56,12 +51,12 @@ $(function() {
       var spacer = 10;
       var toSelect;
       if (event.key == 'j') {
-        toSelect = $('.active').next('.image-label-container');
+        toSelect = $('.active').next('.data-label-container');
         if (toSelect.length == 0) {
           return;
         }
       } else {
-        toSelect = $('.active').prev('.image-label-container')
+        toSelect = $('.active').prev('.data-label-container')
         if (toSelect.length == 0) {
           return;
         }
@@ -93,9 +88,7 @@ $(function() {
       labelObjects.prop('checked', !labelObjects.prop('checked'));
       var labelObjects = $('.active').find('input.keyboard-a');
       labelObjects.prop('checked', !labelObjects.prop('checked'));
-    } else if (event.key == 'n') {
-      $('.active').find('input').prop('checked', false);
-    } else if (event.key == 'l') {
+    }  else if (event.key == 'l') {
       // toggle label visibility
       $('.name').toggleClass('hidden-transparent');
     } else {
@@ -151,14 +144,10 @@ $(function() {
       if (preview.height() > 0.9 * $(window).height()) {
         preview.css({'width': 'auto', 'height': '90%'});
         var space = ($(window).width() - preview.width()) / 2;
-        console.log($(window).width());
-        console.log(preview.width());
         preview.css({'left': space.toString() + 'px'});
-        console.log({'left': space.toString() + 'px'});
       } else {
         var space = ($(window).height() - preview.height()) / 2;
         preview.css({'top': space.toString() + 'px'});
-        console.log({'top': space.toString() + 'px'});
       }
     }
   });

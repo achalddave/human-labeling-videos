@@ -1,0 +1,22 @@
+.to-label-image-container {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.anchor, .to-label {
+  box-shadow: 0px 0px;
+  max-height: 300px;
+  max-width: 400px;
+}
+
+#preview {
+  width: 90%;
+  position: fixed;
+  top: 5%;
+  left: 5%;
+  box-shadow: 0px 0px 2px 2px #333;
+}
+
+.hidden-transparent {
+  opacity: 0;
+}

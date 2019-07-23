@@ -1,0 +1,11 @@
+.to-label-video-container{
+  display: inline-block;
+  vertical-align: top;
+}
+
+video {
+  height: 300px;
+}
+.hidden-transparent {
+  opacity: 0;
+}
