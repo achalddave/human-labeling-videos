@@ -1,3 +1,5 @@
+.venv
+.vscode
 .*@neomake*
 __pycache__
-imagenet-vid-labeling
+*.egg-info
