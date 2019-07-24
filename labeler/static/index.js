@@ -26,7 +26,7 @@ function updateContainer(container) {
   $(container).find('.labels').focus();
   $('video').each(function() { this.pause(); });
   $(container).find('video').each(function() { this.play(); });
-  var event = new CustomEvent('activeContainerUpdated', {'detail': container})
+  var event = new CustomEvent('activeContainerUpdated');
   window.dispatchEvent(event);
 }
 
