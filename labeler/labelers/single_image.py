@@ -7,6 +7,7 @@ from flask import render_template
 
 from labeler.labelers.base import Labeler
 from labeler.label_stores.json_label_store import JsonLabelStore
+from labeler.utils.fs import get_files, IMAGE_EXTENSIONS
 
 
 class LabelSpec(NamedTuple):
@@ -21,7 +22,7 @@ class LabelSpec(NamedTuple):
 class SingleFileLabeler(Labeler):
     def __init__(self, root, extensions, labels_csv, output_dir):
         self.root = Path(root)
-        self.files = self.get_files(self.root, extensions)
+        self.files = get_files(self.root, extensions)
         self.labels = self.load_label_spec(labels_csv)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True, parents=True)
@@ -30,16 +31,20 @@ class SingleFileLabeler(Labeler):
             extra_fields=['notes'],
             labels=[x.name for x in self.labels],
             output_json=self.output_dir / 'labels.json')
-        self.num_items = 5
+        self.num_items = 10
 
     def public_directories(self):
         return {
             'file': self.root
         }
 
-    def key_to_path(self, key):
+    def key_to_url(self, key):
         relative = str(Path(key).relative_to(self.root))
         return f'/file/file/{relative}'
+
+    def url_to_key(self, url):
+        relative = url.split('/file/file/')[1]
+        return self.root / relative
 
     def submit(self, form):
         # request.form is a dictionary that maps from '<file>__<label_id>' to
@@ -74,17 +79,8 @@ class SingleFileLabeler(Labeler):
                               color=row['color']))
         return labels
 
-    def get_files(self, root, extensions):
-        return [
-            x for x in root.rglob('*') if any(
-                x.name.endswith(y) for y in extensions)
-        ]
-
 
 class SingleImageLabeler(SingleFileLabeler):
-    IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm',
-                        '.tif', '.tiff', '.webp')
-
     def __init__(self,
                  root,
                  labels_csv,
@@ -101,6 +97,6 @@ class SingleImageLabeler(SingleFileLabeler):
             num_left_images=total_images - num_complete,
             num_total_images=total_images,
             percent_complete='%.2f' % (100 * num_complete / total_images),
-            images_to_label=[(key, self.key_to_path(key), None)
+            images_to_label=[(key, self.key_to_url(key), None)
                              for key in image_keys],
             labels=[x for x in self.labels])

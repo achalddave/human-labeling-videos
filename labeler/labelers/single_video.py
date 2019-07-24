@@ -7,11 +7,10 @@ from flask import render_template
 
 from labeler.labelers.single_image import SingleFileLabeler
 from labeler.label_stores.json_label_store import JsonLabelStore
+from labeler.utils.fs import VIDEO_EXTENSIONS
 
 
 class SingleVideoLabeler(SingleFileLabeler):
-    VIDEO_EXTENSIONS = ('.mp4',)
-
     def __init__(self,
                  root,
                  labels_csv,
@@ -28,6 +27,6 @@ class SingleVideoLabeler(SingleFileLabeler):
                                num_left_videos=total_videos - num_complete,
                                num_total_videos=total_videos,
                                percent_complete='%.2f' % percent_complete,
-                               videos_to_label=[(key, self.key_to_path(key),
+                               videos_to_label=[(key, self.key_to_url(key),
                                                  None) for key in video_keys],
                                labels=[x for x in self.labels])

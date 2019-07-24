@@ -1,0 +1,25 @@
+.to-label-video-container {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.to-label-thumbnails-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+.to-label-thumbnails-container .thumbnail {
+  width: 100%;
+}
+
+.to-label-video-container > video {
+  height: 300px;
+}
+
+.hidden-transparent {
+  opacity: 0;
+}
+
+.to-label-container {
+  max-height: initial!important;
+}

@@ -123,3 +123,23 @@ input[type='checkbox']:checked + .label-button-orange {
   max-height: 300px;
   max-width: 400px;
 }
+
+.thumbnail {
+  max-height: 300px;
+}
+
+#preview-container {
+  width: 90%;
+  height: 90%;
+  position: fixed;
+  top: 5%;
+  left: 5%;
+  text-align: center;
+  display: none;
+}
+
+#preview {
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: 0px 0px 2px 2px #333;
+}
