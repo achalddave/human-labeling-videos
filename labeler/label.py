@@ -30,7 +30,7 @@ def submit():
     return output
 
 
-@app.route('/api/<api_request>')
+@app.route('/api/<path:api_request>')
 def api(api_request):
     return labeler.api(api_request)
 
