@@ -5,7 +5,7 @@ import csv
 import logging
 from pathlib import Path
 
-from utils import setup_logging
+from labeler.utils.log import setup_logging
 
 
 def main():
