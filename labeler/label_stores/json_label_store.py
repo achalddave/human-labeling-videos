@@ -21,18 +21,20 @@ class JsonLabelStore(LabelStore):
         ...
     }
     """
-    def __init__(self, keys, labels, output_json, extra_fields=[]):
+    def __init__(self, keys, labels, output_json, extra_fields=[], seed=0):
         """
         Args:
             keys (List[str])
             labels (List[str])
             output_json (str)
             extra_fields (List[str])
+            seed (int)
         """
         self.keys = set(keys)
         self.valid_labels = labels
         self.extra_fields = extra_fields
         self.output = Path(output_json)
+        self.seed = seed
         if self.output.exists():
             self._load_from_disk()
         else:
@@ -80,9 +82,9 @@ class JsonLabelStore(LabelStore):
         self._dump_to_disk()
 
     def get_unlabeled(self, num_items):
-        unlabeled = list(self.keys -
-                         set([x['key'] for x in self.current_labels]))
-        random.shuffle(unlabeled)
+        unlabeled = sorted(self.keys -
+                           set([x['key'] for x in self.current_labels]))
+        random.Random(self.seed).shuffle(unlabeled)
         return unlabeled[:num_items]
 
     def num_completed(self):
