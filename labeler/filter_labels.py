@@ -12,14 +12,18 @@ from script_utils.common import common_setup
 
 
 def load_labels(input_paths):
-    # Map anchor-image key to list of (input_path, label) tuples.
+    # Map data to list of (input_path, label) tuples.
     labels = collections.defaultdict(list)
+    labels_list = None
     for path in input_paths:
         with open(path, 'r') as f:
             annotations = json.load(f)
-            for i, row in enumerate(annotations):
-                key = (row['anchor'], row['image'])
-                labels[key].append((path, row))
+            for i, row in enumerate(annotations['annotations']):
+                labels[row['key']].append((path, row))
+            if labels_list is None:
+                labels_list = annotations['labels']
+            else:
+                assert labels_list == annotations['labels']
 
     for key, key_labels in labels.items():
         if len(key_labels) > 1:
@@ -28,7 +32,7 @@ def load_labels(input_paths):
                 f'{key} labeled multiple times in {paths}; using latest '
                 f'label from {paths[-1]}.')
         labels[key] = key_labels[-1][1]
-    return labels
+    return labels, labels_list
 
 
 def filter_labels(labels,
@@ -40,11 +44,9 @@ def filter_labels(labels,
                   must_have_one_of=False):
     label_map = {}
     label_names = {}
-    with open(labels_list, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            label_map[row['name']] = int(row['index'])
-            label_names[int(row['index'])] = row['name']
+    for i, label in enumerate(labels_list):
+        label_map[label] = i
+        label_names[i] = label
 
     def validate_label(label):
         if label not in label_map:
@@ -134,7 +136,6 @@ def main():
         action='store_true',
         help=('If true, only one (not all) of --must-have labels needs to be '
               'present.'))
-    parser.add_argument('--labels-list', required=True)
     args = parser.parse_args()
 
     args.output_labels.parent.mkdir(exist_ok=True, parents=True)
@@ -143,9 +144,9 @@ def main():
         args.output_labels.parent, args)
     logging.info('Args:\n%s', vars(args))
 
-    labels = load_labels(args.input_labels)
-    valid_rows = filter_labels(labels, args.labels_list,
-                               file_logger, args.must_have, args.must_not_have,
+    labels, labels_list = load_labels(args.input_labels)
+    valid_rows = filter_labels(labels, labels_list, file_logger,
+                               args.must_have, args.must_not_have,
                                args.can_have, args.must_have_one_of)
     logging.info(
         '%s/%s rows matched criterion' % (len(valid_rows), len(labels)))
