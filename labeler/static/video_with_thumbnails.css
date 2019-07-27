@@ -23,3 +23,8 @@
 .to-label-container {
   max-height: initial!important;
 }
+
+canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
