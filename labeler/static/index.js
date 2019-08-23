@@ -28,8 +28,15 @@ function updateContainer(container) {
   window.dispatchEvent(event);
 }
 
-$(function() {
+function scrollToContainer(container) {
+  var elementMid = container.offset().top + container.height() / 2;
+  $([document.documentElement, document.body]).animate({
+    scrollTop: Math.max(0,
+      elementMid - ($(window).height() / 2))
+  }, 100);
+}
 
+$(function() {
   // var topSpace = 5;
   $('#preview-container').hide();
 
@@ -50,14 +57,6 @@ $(function() {
       return;
     }
     if (event.key == 'j' || event.key == 'k') {
-      var topOffsets = $('.data-label-container').map(function() {
-        return {
-          'object': $(this),
-          'offset': $(this).offset().top - $(window).scrollTop()
-        };
-      });
-
-      var spacer = 10;
       var toSelect;
       if (event.key == 'j') {
         toSelect = $('.active').next('.data-label-container');
@@ -70,12 +69,7 @@ $(function() {
           return;
         }
       }
-      var elementOffset = $(toSelect).offset();
-      var elementMid = toSelect.offset().top + toSelect.height() / 2;
-      $([document.documentElement, document.body]).animate({
-        scrollTop: Math.max(0,
-          elementMid - ($(window).height() / 2))
-      }, 100);
+      scrollToContainer(toSelect);
       updateContainer(toSelect);
       // toSelect.scrollIntoView({'behavior': 'instant'});
     } else if (!isNaN(event.key)) {
