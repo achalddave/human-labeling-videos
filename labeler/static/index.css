@@ -91,6 +91,10 @@ input[type='checkbox']:checked + .label-button {
   background: white;
 }
 
+.label-button-gray {
+  border-bottom: solid 3px #333;
+}
+
 .label-button-orange {
   border-bottom: solid 3px orange;
 }
@@ -117,6 +121,12 @@ input[type='checkbox']:checked + .label-button-orange {
   background: orange;
   color: white;
 }
+
+input[type='checkbox']:checked + .label-button-gray {
+  background: #333;
+  color: white;
+}
+
 
 .to-label {
   box-shadow: 0px 0px;
