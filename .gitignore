@@ -3,3 +3,4 @@
 .*@neomake*
 __pycache__
 *.egg-info
+debug/
