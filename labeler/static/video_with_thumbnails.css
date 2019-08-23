@@ -28,3 +28,18 @@ canvas {
   max-width: 100%;
   max-height: 100%;
 }
+
+#loading-thumbnails {
+  position: fixed;
+  font-size: 2em;
+  box-shadow: 0 0 5px 1px rgba(60, 0, 116);
+  left: 5%;
+  width: 90%;
+  height: 30%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  color: white;
+  background: rgba(60, 0, 116, 0.7);
+}

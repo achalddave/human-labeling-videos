@@ -159,16 +159,30 @@ class ThumbnailCreator {
     // Hide all other thumbnails
     $(".to-label-thumbnails-container").hide();
     $(".active").find(".to-label-thumbnails-container").show();
+    scrollToContainer($(".active"));
   }
 }
 
 let thumbnailer = new ThumbnailCreator();
 $(function() {
+  // Wait a few seconds for videos to load, then start generating thumbnails 
+  // Ideally we would run this after 'loadedmetadata' is fired on all videos,
+  // but I can't find an easy way to listen for all of those events to fire.
+  $('body').prepend('<div id="loading-thumbnails">Loading...</div>')
   let thumbnailPromise = Promise.resolve();
+  var firstThumbnailsLoaded = false;
+  $('video').each(function() { this.pause() });
   $(".data-label-container").each(function() {
     thumbnailPromise = thumbnailPromise.then(() => {
-      thumbnailer.createContainerThumbnails($(this));
+      return thumbnailer.createContainerThumbnails($(this));
     });
+    if (!firstThumbnailsLoaded) {
+      firstThumbnailsLoaded = true;
+      thumbnailPromise.then(() => {
+        $("#loading-thumbnails").hide();
+        $('video.to-label')[0].play();
+      });
+    }
   });
 });
 
