@@ -18,8 +18,6 @@ function isVisible(elem, partialOk) {
   }
 }
 
-
-
 function updateContainer(container) {
   $('.active').removeClass('active');
   $(container).addClass('active');
