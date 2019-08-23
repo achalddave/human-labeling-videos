@@ -31,15 +31,6 @@ function updateContainer(container) {
 }
 
 $(function() {
-  // $(window).scroll(function() {
-  //   $('video').each(function() {
-  //     if (isVisible(this, false /*partialOk*/)) {
-  //       this.play();
-  //     } else {
-  //       this.pause();
-  //     }
-  //   });
-  // });
 
   // var topSpace = 5;
   $('#preview-container').hide();
