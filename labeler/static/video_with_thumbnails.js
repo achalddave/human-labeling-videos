@@ -113,7 +113,9 @@ class ThumbnailCreator {
     }
 
     let video = labelContainer.find("video.to-label");
-    let numThumbnails = parseInt(thumbnailContainer.attr("num-thumbnails"));
+    let numThumbnails = parseInt(thumbnailContainer.attr("data-num-thumbnails"));
+    let requireFirstThumbnail =
+      JSON.parse(thumbnailContainer.attr("data-require-first-thumbnail"));
 
     let creator = new SingleVideoThumbnailCreator(video.attr("src"));
 
@@ -123,6 +125,10 @@ class ThumbnailCreator {
         let promise = Promise.resolve();
         for (let i = 1; i < numThumbnails + 1; ++i) {
           let thumbnailTime = (duration * i) / numThumbnails;
+          if (requireFirstThumbnail && i == 1) {
+            thumbnailTime = 0;
+          }
+
           // Next promise will be resolved after this thumbnail is received.
           promise = promise.then(() => {
             return creator.get_thumbnail(thumbnailTime);
