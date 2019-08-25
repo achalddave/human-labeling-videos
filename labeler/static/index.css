@@ -81,7 +81,7 @@ input[type='checkbox']:checked + .label-button {
   margin: 0 auto;
 }
 
-#submit {
+#submit-button {
   margin: 10px auto;
   display: block;
 }
