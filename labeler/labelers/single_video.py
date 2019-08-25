@@ -15,8 +15,13 @@ class SingleVideoLabeler(SingleFileLabeler):
                  root,
                  labels_csv,
                  output_dir,
+                 num_items=10,
                  extensions=VIDEO_EXTENSIONS):
-        super().__init__(root, extensions, labels_csv, output_dir)
+        super().__init__(root,
+                         extensions,
+                         labels_csv,
+                         output_dir,
+                         num_items=num_items)
 
     def index(self):
         video_keys = self.label_store.get_unlabeled(self.num_items)

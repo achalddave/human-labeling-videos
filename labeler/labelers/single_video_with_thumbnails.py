@@ -11,11 +11,13 @@ class SingleVideoWithThumbnailsLabeler(SingleVideoLabeler):
                  output_dir,
                  num_thumbnails=5,
                  require_first_thumbnail=False,
-                 extensions=VIDEO_EXTENSIONS):
+                 extensions=VIDEO_EXTENSIONS,
+                 num_items=10):
         super().__init__(root=root,
                          labels_csv=labels_csv,
                          extensions=extensions,
-                         output_dir=output_dir)
+                         output_dir=output_dir,
+                         num_items=num_items)
         self.require_first_thumbnail = require_first_thumbnail
         self.num_thumbnails = num_thumbnails
 

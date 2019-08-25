@@ -20,7 +20,7 @@ class LabelSpec(NamedTuple):
 
 
 class SingleFileLabeler(Labeler):
-    def __init__(self, root, extensions, labels_csv, output_dir):
+    def __init__(self, root, extensions, labels_csv, output_dir, num_items=10):
         self.root = Path(root)
         self.files = get_files(self.root, extensions)
         self.labels = self.load_label_spec(labels_csv)
@@ -31,7 +31,7 @@ class SingleFileLabeler(Labeler):
             extra_fields=['notes'],
             labels=[x.name for x in self.labels],
             output_json=self.output_dir / 'labels.json')
-        self.num_items = 10
+        self.num_items = num_items
 
     def public_directories(self):
         return {
