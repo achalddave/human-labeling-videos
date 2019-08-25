@@ -56,6 +56,11 @@ $(function() {
     if ($('input:text').is(':focus')) {
       return;
     }
+
+    if(event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
+      $('form').submit();
+    }
+
     if (event.key == 'j' || event.key == 'k') {
       var toSelect;
       if (event.key == 'j') {
