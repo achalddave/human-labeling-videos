@@ -2,7 +2,7 @@ import json
 import random
 from pathlib import Path
 
-from label_stores.base import LabelStore
+from labeler.label_stores.base import LabelStore
 
 
 class JsonLabelStore(LabelStore):

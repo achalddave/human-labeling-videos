@@ -86,7 +86,7 @@ class SingleImageLabeler(SingleFileLabeler):
                  labels_csv,
                  output_dir,
                  extensions=IMAGE_EXTENSIONS):
-        super.__init__(self, root, extensions, labels_csv, output_dir)
+        super().__init__(root, extensions, labels_csv, output_dir)
 
     def index(self):
         image_keys = self.label_store.get_unlabeled(self.num_items)
