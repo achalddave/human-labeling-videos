@@ -13,6 +13,9 @@ input[type='checkbox'] {
   border-top: solid 0.5px #333;
   border-left: solid 5px white;
   box-sizing: border-box;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .label-button {
@@ -33,9 +36,11 @@ input[type='checkbox']:checked + .label-button {
 }
 
 .to-label-container {
-  max-height: 400px;
-  overflow: hidden;
+  overflow: scroll;
   resize: vertical;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .to-label {
@@ -130,8 +135,6 @@ input[type='checkbox']:checked + .label-button-gray {
 
 .to-label {
   box-shadow: 0px 0px;
-  max-height: 300px;
-  max-width: 400px;
 }
 
 .thumbnail {

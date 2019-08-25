@@ -1,6 +1,7 @@
 .to-label-video-container {
   display: inline-block;
   vertical-align: top;
+  min-height: 300px;
 }
 
 .to-label-thumbnails-container {
@@ -13,7 +14,8 @@
 }
 
 .to-label-video-container > video {
-  height: 300px;
+  height: 100%;
+  max-width: 100%;
 }
 
 .hidden-transparent {
