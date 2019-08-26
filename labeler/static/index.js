@@ -90,18 +90,15 @@ $(function() {
       }
       var label_object = labels.eq(label_index);
       label_object.prop('checked', !label_object.prop('checked'));
-    } else if (event.key == 'm') {
-      // Hack: hit `q` and `a` when `m` is hit.
-      var labelObjects = $('.active').find('input.keyboard-q');
-      labelObjects.prop('checked', !labelObjects.prop('checked'));
-      var labelObjects = $('.active').find('input.keyboard-a');
-      labelObjects.prop('checked', !labelObjects.prop('checked'));
-    }  else if (event.key == 'l') {
-      // toggle label visibility
-      $('.name').toggleClass('hidden-transparent');
     } else {
       var labelObjects = $('.active').find('input.keyboard-' + event.key);
-      labelObjects.prop('checked', !labelObjects.prop('checked'));
+      if (labelObjects.length != 0) {
+        console.log(labelObjects.length);
+        labelObjects.prop('checked', !labelObjects.prop('checked'));
+      } else {
+        let newEvent = new CustomEvent('unhandledKey', { detail: event});
+        window.dispatchEvent(newEvent);
+      }
     }
   });
 
