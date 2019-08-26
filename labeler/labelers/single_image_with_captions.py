@@ -21,17 +21,8 @@ class SingleImageWithCaptionsLabeler(SingleImageLabeler):
         with open(image_caption_json, 'r') as f:
             self.image_captions = json.load(f)
 
-        self.root = Path(root)
-        self.files = [self.root / x for x in self.image_captions.keys()]
-        self.labels = self.load_label_spec(labels_csv)
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True, parents=True)
-        self.label_store = JsonLabelStore(
-            keys=map(str, self.files),
-            extra_fields=['notes'],
-            labels=[x.name for x in self.labels],
-            output_json=self.output_dir / 'labels.json')
-        self.num_items = num_items
+        files = [Path(root) / x for x in self.image_captions.keys()]
+        self.init_with_files(root, files, labels_csv, output_dir, num_items)
 
     def index(self):
         image_keys = self.label_store.get_unlabeled(self.num_items)

@@ -1,5 +1,6 @@
 import collections
 import csv
+import shutil
 from pathlib import Path
 from typing import NamedTuple, Optional
 
@@ -21,9 +22,18 @@ class LabelSpec(NamedTuple):
 
 class SingleFileLabeler(Labeler):
     def __init__(self, root, extensions, labels_csv, output_dir, num_items=10):
+        files = get_files(Path(root), extensions)
+        self.init_with_files(root, files, labels_csv, output_dir, num_items)
+
+    def init_with_files(self,
+                        root,
+                        files,
+                        labels_csv,
+                        output_dir,
+                        num_items=10):
         self.root = Path(root)
-        self.files = get_files(self.root, extensions)
-        self.labels = self.load_label_spec(labels_csv)
+        self.files = files
+        self.labels = SingleFileLabeler.load_label_spec(labels_csv)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True, parents=True)
         self.label_store = JsonLabelStore(
@@ -32,6 +42,15 @@ class SingleFileLabeler(Labeler):
             labels=[x.name for x in self.labels],
             output_json=self.output_dir / 'labels.json')
         self.num_items = num_items
+
+        output_labels_csv = self.output_dir / Path(labels_csv).name
+        if output_labels_csv.exists():
+            old_spec = SingleFileLabeler.load_label_spec(output_labels_csv)
+            assert old_spec == self.labels, (
+                f'Labels from previous run at {output_labels_csv} do not '
+                f'match labels provided at {labels_csv}')
+        else:
+            shutil.copy2(labels_csv, self.output_dir)
 
     def public_directories(self):
         return {
@@ -65,7 +84,8 @@ class SingleFileLabeler(Labeler):
                 label_infos[file_key]['labels'].append(int(info_key))
         self.label_store.update(label_infos)
 
-    def load_label_spec(self, csv_path):
+    @staticmethod
+    def load_label_spec(csv_path):
         labels = []
         with open(csv_path, 'r') as f:
             reader = csv.DictReader(f)
