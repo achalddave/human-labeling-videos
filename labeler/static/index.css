@@ -41,6 +41,7 @@ input[type='checkbox']:checked + .label-button {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: auto;
 }
 
 .to-label {
