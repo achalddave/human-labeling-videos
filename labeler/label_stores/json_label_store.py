@@ -49,7 +49,9 @@ class JsonLabelStore(LabelStore):
 
         for annotation in data['annotations']:
             key = annotation['key']
-            assert key in self.keys, f"Could not find {key} in {self.keys}"
+            assert key in self.keys, (
+                f"Could not find key {key} from previously saved labels in "
+                f"current list of keys to label.")
             assert all(0 <= int(x) < len(self.valid_labels)
                        for x in annotation['labels'])
             assert set(annotation.keys()) == set(['labels', 'key'] +
