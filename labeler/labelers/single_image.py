@@ -73,7 +73,7 @@ class SingleFileLabeler(Labeler):
             'labels': []
         })
         for key, value in form.items():
-            file_key, info_key = key.split('__')
+            file_key, info_key = key.rsplit('__', 1)
             if info_key == 'notes':
                 label_infos[file_key]['notes'] = value
             else:
