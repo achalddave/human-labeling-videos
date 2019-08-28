@@ -67,6 +67,13 @@ class JsonLabelStore(LabelStore):
                     'labels': self.valid_labels
                 }, f)
 
+    def get_latest_label(self, key):
+        matches = (x for x in reversed(self.current_labels) if x['key'] == key)
+        try:
+            return next(matches)
+        except StopIteration:
+            return None
+
     def update(self, labels):
         """
         Args:

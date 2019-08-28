@@ -17,20 +17,29 @@ class LabelSpec(NamedTuple):
     description_short: str
     description_long: str
     keyboard: str
+    ui_row: int
     color: Optional[str] = None
 
 
 class SingleFileLabeler(Labeler):
-    def __init__(self, root, extensions, labels_csv, output_dir, num_items=10):
+    def __init__(self,
+                 root,
+                 extensions,
+                 labels_csv,
+                 output_dir,
+                 num_items=10,
+                 review_labels=None):
         files = get_files(Path(root), extensions)
-        self.init_with_files(root, files, labels_csv, output_dir, num_items)
+        self.init_with_files(root, files, labels_csv, output_dir, num_items,
+                             review_labels)
 
     def init_with_files(self,
                         root,
                         files,
                         labels_csv,
                         output_dir,
-                        num_items=10):
+                        num_items=10,
+                        review_labels=None):
         self.root = Path(root)
         self.files = files
         self.labels = SingleFileLabeler.load_label_spec(labels_csv)
@@ -42,6 +51,14 @@ class SingleFileLabeler(Labeler):
             labels=[x.name for x in self.labels],
             output_json=self.output_dir / 'labels.json')
         self.num_items = num_items
+        if review_labels is None:
+            self.review_labels = None
+        else:
+            self.review_labels = JsonLabelStore(
+                keys=map(str, self.files),
+                extra_fields=['notes'],
+                labels=[x.name for x in self.labels],
+                output_json=review_labels)
 
         output_labels_csv = self.output_dir / Path(labels_csv).name
         if output_labels_csv.exists():
@@ -84,6 +101,20 @@ class SingleFileLabeler(Labeler):
                 label_infos[file_key]['labels'].append(int(info_key))
         self.label_store.update(label_infos)
 
+    def labels_by_row(self):
+        labels_by_row = collections.defaultdict(list)
+        for label in self.labels:
+            labels_by_row[label.ui_row].append(label)
+        return [
+            labels_by_row[row] for row in sorted(labels_by_row.keys())
+        ]
+
+    def review_annotation(self, key):
+        if self.review_labels is None:
+            return None
+        else:
+            return self.review_labels.get_latest_label(key)
+
     @staticmethod
     def load_label_spec(csv_path):
         labels = []
@@ -96,6 +127,7 @@ class SingleFileLabeler(Labeler):
                               idx=int(row['index']),
                               description_short=row['description_short'],
                               description_long=row['description_long'],
+                              ui_row=row.get('row', 0),
                               color=row['color']))
         return labels
 
@@ -105,18 +137,25 @@ class SingleImageLabeler(SingleFileLabeler):
                  root,
                  labels_csv,
                  output_dir,
-                 extensions=IMAGE_EXTENSIONS):
-        super().__init__(root, extensions, labels_csv, output_dir)
+                 extensions=IMAGE_EXTENSIONS,
+                 review_labels=None):
+        super().__init__(root,
+                         extensions,
+                         labels_csv,
+                         output_dir,
+                         review_labels=review_labels)
 
     def index(self):
         image_keys = self.label_store.get_unlabeled(self.num_items)
         total_images = self.label_store.num_total()
         num_complete = self.label_store.num_completed()
-        return render_template(
-            'label_single_image.html',
-            num_left_images=total_images - num_complete,
-            num_total_images=total_images,
-            percent_complete='%.2f' % (100 * num_complete / total_images),
-            images_to_label=[(key, self.key_to_url(key), None)
-                             for key in image_keys],
-            labels=[x for x in self.labels])
+        percent_complete = '%.2f' % (100 * num_complete / total_images)
+
+        images_to_label = [(key, self.key_to_url(key),
+                            self.review_annotation(key)) for key in image_keys]
+        return render_template('label_single_image.html',
+                               num_left_images=total_images - num_complete,
+                               num_total_images=total_images,
+                               percent_complete=percent_complete,
+                               images_to_label=images_to_label,
+                               labels=self.labels_by_row())

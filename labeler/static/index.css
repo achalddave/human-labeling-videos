@@ -79,7 +79,7 @@ input[type='checkbox']:checked + .label-button {
   margin-bottom: 20px;
 }
 
-.notes {
+.notes, .label-search {
   display: block;
   font-size: 1em;
   padding: 10px;

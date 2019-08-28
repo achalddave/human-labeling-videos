@@ -45,7 +45,7 @@ $(function() {
 
   $('video.to-label').each(function() {
     this.playbackRate = 2.0;
-  })
+  });
 
   updateContainer($('.data-label-container').eq(0));
 
@@ -176,4 +176,18 @@ $(function() {
   });
   $("#preview").hide();
 
+  $(".label-search").on("input", function() {
+    let text = $(this).val();
+    let labels = $(this).siblings(".labels").find("label");
+    labels.each(function() {
+      if ($(this).text().toLowerCase().includes(text.toLowerCase())) {
+        $(this).css("opacity", 1);
+        // If there is text in the field, allow the label to be tabbed.
+        $(this).attr("tabindex", text.length > 0 ? "0" : "-1");
+      } else {
+        $(this).css("opacity", 0.3);
+        $(this).attr("tabindex", "-1");
+      }
+    });
+  });
 });

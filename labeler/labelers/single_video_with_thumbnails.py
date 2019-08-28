@@ -26,14 +26,15 @@ class SingleVideoWithThumbnailsLabeler(SingleVideoLabeler):
         total_videos = self.label_store.num_total()
         num_complete = self.label_store.num_completed()
         percent_complete = 100 * num_complete / max(total_videos, 1e-9)
+        videos_to_label = [(key, self.key_to_url(key),
+                            self.review_annotation(key)) for key in video_keys]
         return render_template(
             'label_video_with_thumbnails.html',
             num_left_videos=total_videos - num_complete,
             num_total_videos=total_videos,
             num_thumbnails=self.num_thumbnails,
             percent_complete='%.2f' % percent_complete,
-            videos_to_label=[(key, self.key_to_url(key), None)
-                             for key in video_keys],
+            videos_to_label=videos_to_label,
             require_first_thumbnail=('true' if self.require_first_thumbnail
                                      else 'false'),
-            labels=[x for x in self.labels])
+            labels=self.labels_by_row())
