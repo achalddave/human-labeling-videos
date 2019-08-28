@@ -111,6 +111,13 @@ $(function() {
     }
   });
 
+  $("label").keypress(function(event) {
+    if (event.which == 32) { // space bar
+      $(this).click();
+      event.preventDefault();
+    }
+  });
+
   $('form').submit(function() {
     var error = false;
     var numUnlabeled = 0;
