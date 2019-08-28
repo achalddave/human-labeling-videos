@@ -43,14 +43,6 @@ class SingleFileLabeler(Labeler):
         self.root = Path(root)
         self.files = files
         self.labels = SingleFileLabeler.load_label_spec(labels_csv)
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True, parents=True)
-        self.label_store = JsonLabelStore(
-            keys=map(str, self.files),
-            extra_fields=['notes'],
-            labels=[x.name for x in self.labels],
-            output_json=self.output_dir / 'labels.json')
-        self.num_items = num_items
         if review_labels is None:
             self.review_labels = None
         else:
@@ -59,6 +51,18 @@ class SingleFileLabeler(Labeler):
                 extra_fields=['notes'],
                 labels=[x.name for x in self.labels],
                 output_json=review_labels)
+            review_keys = {x['key'] for x in self.review_labels.current_labels}
+            self.review_labels.keys = review_keys
+            self.files = sorted(review_keys)
+
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(exist_ok=True, parents=True)
+        self.label_store = JsonLabelStore(
+            keys=map(str, self.files),
+            extra_fields=['notes'],
+            labels=[x.name for x in self.labels],
+            output_json=self.output_dir / 'labels.json')
+        self.num_items = num_items
 
         output_labels_csv = self.output_dir / Path(labels_csv).name
         if output_labels_csv.exists():
