@@ -18,10 +18,13 @@ function isVisible(elem, partialOk) {
   }
 }
 
-function updateContainer(container) {
+function updateContainer(container, updateFocus) {
+  updateFocus = updateFocus === undefined ? true : updateFocus;
   $('.active').removeClass('active');
   $(container).addClass('active');
-  $(container).find('.labels').focus();
+  if (updateFocus) {
+    $(container).focus();
+  }
   $('video').each(function() { this.pause(); });
   $(container).find('video').each(function() { this.play(); });
   var event = new CustomEvent('activeContainerUpdated');
@@ -46,11 +49,17 @@ $(function() {
 
   updateContainer($('.data-label-container').eq(0));
 
-  $('.labels').focus(function() {
-    if (!$(this).parent().hasClass('active')) {
-      updateContainer($(this).parent());
+  $(".data-label-container").focusin(function() {
+    if (!$(this).hasClass("active")) {
+      updateContainer($(this), false /*updateFocus*/);
     }
   });
+
+  $(".data-label-container").focus(function() {
+    updateContainer($(this), false /*updateFocus*/);
+    scrollToContainer($(this));
+  });
+
 
   $(window).keypress(function(event) {
     if ($('input:text').is(':focus')) {
