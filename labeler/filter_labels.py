@@ -37,11 +37,15 @@ def load_labels(input_paths):
 
 def filter_labels(labels,
                   labels_list,
-                  file_logger,
+                  file_logger=None,
                   must_have=[],
                   must_not_have=[],
                   can_have=[],
-                  must_have_one_of=False):
+                  must_have_one_of=False,
+                  unspecified_labels_policy='error'):
+    if file_logger is None:
+        file_logger = logging.getLogger()
+
     label_map = {}
     label_names = {}
     for i, label in enumerate(labels_list):
@@ -65,9 +69,19 @@ def filter_labels(labels,
         set(label_map.values()) -
         (must_have_labels | must_not_have_labels | can_have_labels))
     if unspecified_labels:
-        raise ValueError('Label(s): %s were not specified in any of '
-                         '--{must,must-not,can}-have.' %
-                         [label_names[x] for x in unspecified_labels])
+        if unspecified_labels_policy == 'error':
+            raise ValueError('Label(s): %s were not specified in any of '
+                             '--{must,must-not,can}-have.' %
+                             [label_names[x] for x in unspecified_labels])
+        elif unspecified_labels_policy == 'can-have':
+            can_have_labels |= unspecified_labels
+        elif unspecified_labels_policy == 'must-have':
+            must_have_labels |= unspecified_labels
+        elif unspecified_labels_policy == 'must-not-have':
+            must_not_have_labels |= unspecified_labels
+        else:
+            raise ValueError('Unknown unspecified_labels_policy %s' %
+                             unspecified_labels_policy)
 
     logging.info('Looking for rows that')
     if must_have_one_of:
@@ -136,6 +150,11 @@ def main():
         action='store_true',
         help=('If true, only one (not all) of --must-have labels needs to be '
               'present.'))
+    parser.add_argument(
+        '--unspecified-labels',
+        choices=['error', 'can-have', 'must-have', 'must-not-have'],
+        default='error',
+        help='What to do about labels not specified in flags.')
     args = parser.parse_args()
 
     args.output_labels.parent.mkdir(exist_ok=True, parents=True)
@@ -147,7 +166,8 @@ def main():
     labels, labels_list = load_labels(args.input_labels)
     valid_rows = filter_labels(labels, labels_list, file_logger,
                                args.must_have, args.must_not_have,
-                               args.can_have, args.must_have_one_of)
+                               args.can_have, args.must_have_one_of,
+                               args.unspecified_labels)
     logging.info(
         '%s/%s rows matched criterion' % (len(valid_rows), len(labels)))
     with open(args.output_labels, 'w') as f:
