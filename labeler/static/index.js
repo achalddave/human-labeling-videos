@@ -171,5 +171,9 @@ $(function() {
     }
   });
 
-  $('#preview').click(() => $(this).hide());
+  $("#preview").click(function() {
+    $(this).hide();
+  });
+  $("#preview").hide();
+
 });
