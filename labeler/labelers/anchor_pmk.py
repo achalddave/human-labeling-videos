@@ -63,10 +63,14 @@ class AnchorPmkLabeler(SingleImageWithCaptionsLabeler):
             for key in anchor_pmk_keys
         }
         labels_by_row = self.labels_by_row()
-        # Hack: Assume second row is categories, sort by name.
-        row1 = labels_by_row[1]
-        row1 = [row1[0]] + sorted(row1[1:], key=lambda x: x.name)
-        labels_by_row[1] = row1
+
+        # Hack: Sort categories row
+        category_row_idx = next(i for i, row in enumerate(labels_by_row)
+                                if any(x.name == 'person' for x in row))
+        category_row = labels_by_row[category_row_idx]
+        row1 = [category_row[0]] + sorted(category_row[1:],
+                                          key=lambda x: x.name)
+        labels_by_row[category_row_idx] = row1
 
         pairs_to_label = []
         for key in anchor_pmk_keys:
