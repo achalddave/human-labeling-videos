@@ -9,6 +9,26 @@
   {% endif %}/>
 {% endmacro %}
 
+{% macro label_buttons_new(data_key, labels, current_label) %}
+{% for label_row in labels %}
+{% for label in label_row %}
+<input name='{{data_key}}__{{label.idx}}'
+        class='keyboard-{{label.keyboard}}'
+        {% if current_label is not none and label.idx in current_label["labels"] %}
+            checked
+        {% endif %}
+        id='{{data_key}}__{{label.idx}}-id' type='checkbox'>
+<label title='{{label.description_long}}'
+       class='label-button label-button-{{label.color}}'
+       for='{{data_key}}__{{label.idx}}-id'>
+  {{label.description_short}}
+</label>
+{% endfor %}
+<br />
+{% endfor %}
+{% endmacro %}
+
+
 {% macro label_buttons(data_key, labels, current_label) %}
 {% for label_row in labels %}
 {% for label_id, name, desc_short, desc_long, key, _, color in label_row %}

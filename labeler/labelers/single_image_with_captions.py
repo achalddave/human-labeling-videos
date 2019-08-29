@@ -22,13 +22,12 @@ class SingleImageWithCaptionsLabeler(SingleImageLabeler):
         with open(image_caption_json, 'r') as f:
             self.image_captions = json.load(f)
 
-        files = [Path(root) / x for x in self.image_captions.keys()]
-        self.init_with_files(root,
-                             files,
-                             labels_csv,
-                             output_dir,
-                             num_items,
-                             review_labels=review_labels)
+        self.init_with_keys(root,
+                            self.image_captions.keys(),
+                            labels_csv,
+                            output_dir,
+                            num_items,
+                            review_labels=review_labels)
 
     def index(self):
         image_keys = self.label_store.get_unlabeled(self.num_items)
@@ -45,8 +44,8 @@ class SingleImageWithCaptionsLabeler(SingleImageLabeler):
         labels_by_row[1] = row1
 
         images_to_label = [(key, self.key_to_url(key),
-                            self.review_annotation(key), captions[key])
-                           for key in image_keys]
+                            self.label_store.get_initial_label(key),
+                            captions[key]) for key in image_keys]
 
         return render_template('label_single_image_with_captions.html',
                                num_left_images=total_images - num_complete,

@@ -32,7 +32,7 @@ function updateContainer(container, updateFocus) {
 }
 
 function scrollToContainer(container) {
-  var elementMid = container.offset().top + container.height() / 2;
+  var elementMid = container.offset().top + container.outerHeight() / 2;
   $([document.documentElement, document.body]).animate({
     scrollTop: Math.max(0,
       elementMid - ($(window).height() / 2))

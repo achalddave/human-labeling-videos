@@ -19,6 +19,7 @@ class LabelSpec(NamedTuple):
     keyboard: str
     ui_row: int
     color: Optional[str] = None
+    extra: Optional[dict] = None
 
 
 class SingleFileLabeler(Labeler):
@@ -29,39 +30,31 @@ class SingleFileLabeler(Labeler):
                  output_dir,
                  num_items=10,
                  review_labels=None):
-        files = get_files(Path(root), extensions)
-        self.init_with_files(root, files, labels_csv, output_dir, num_items,
-                             review_labels)
+        keys = [x.relative_to(root) for x in get_files(Path(root), extensions)]
+        self.init_with_keys(root, keys, labels_csv, output_dir, num_items,
+                            review_labels)
 
-    def init_with_files(self,
-                        root,
-                        files,
-                        labels_csv,
-                        output_dir,
-                        num_items=10,
-                        review_labels=None):
+    def init_with_keys(self,
+                       root,
+                       keys,
+                       labels_csv,
+                       output_dir,
+                       num_items=10,
+                       review_labels=None):
         self.root = Path(root)
-        self.files = files
         self.labels = SingleFileLabeler.load_label_spec(labels_csv)
-        if review_labels is None:
-            self.review_labels = None
-        else:
-            self.review_labels = JsonLabelStore(
-                keys=map(str, self.files),
-                extra_fields=['notes'],
-                labels=[x.name for x in self.labels],
-                output_json=review_labels)
-            review_keys = {x['key'] for x in self.review_labels.current_labels}
-            self.review_labels.keys = review_keys
-            self.files = sorted(review_keys)
-
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True, parents=True)
         self.label_store = JsonLabelStore(
-            keys=map(str, self.files),
+            keys=map(str, keys),
             extra_fields=['notes'],
             labels=[x.name for x in self.labels],
-            output_json=self.output_dir / 'labels.json')
+            output_json=self.output_dir / 'labels.json',
+            initial_labels=review_labels)
+        if review_labels is not None:
+            self.label_store.keys = (
+                self.label_store.initial_labels.labeled_keys())
+
         self.num_items = num_items
 
         output_labels_csv = self.output_dir / Path(labels_csv).name
@@ -79,14 +72,18 @@ class SingleFileLabeler(Labeler):
         }
 
     def key_to_url(self, key):
-        relative = str(Path(key).relative_to(self.root))
+        key_path = Path(key)
+        if key_path.is_absolute():
+            relative = str(key_path.relative_to(self.root))
+        else:
+            relative = str(key_path)
         return f'/file/file/{relative}'
 
     def url_to_key(self, url):
         relative = url.split('/file/file/')[1]
         return self.root / relative
 
-    def submit(self, form):
+    def parse_form(self, form):
         # request.form is a dictionary that maps from '<file>__<label_id>' to
         # 'on' if the user labeled this file as containing label id.
         label_infos = collections.defaultdict(lambda: {
@@ -103,7 +100,10 @@ class SingleFileLabeler(Labeler):
                         'Unknown value %s in response for key %s' %
                         (value, key))
                 label_infos[file_key]['labels'].append(int(info_key))
-        self.label_store.update(label_infos)
+        return label_infos
+
+    def submit(self, form):
+        self.label_store.update(self.parse_form(form))
 
     def labels_by_row(self):
         labels_by_row = collections.defaultdict(list)
@@ -113,12 +113,6 @@ class SingleFileLabeler(Labeler):
             labels_by_row[row] for row in sorted(labels_by_row.keys())
         ]
 
-    def review_annotation(self, key):
-        if self.review_labels is None:
-            return None
-        else:
-            return self.review_labels.get_latest_label(key)
-
     @staticmethod
     def load_label_spec(csv_path):
         labels = []
@@ -126,13 +120,14 @@ class SingleFileLabeler(Labeler):
             reader = csv.DictReader(f)
             for row in reader:
                 labels.append(
-                    LabelSpec(name=row['name'],
-                              keyboard=row['keyboard'],
-                              idx=int(row['index']),
-                              description_short=row['description_short'],
-                              description_long=row['description_long'],
-                              ui_row=row.get('row', 0),
-                              color=row['color']))
+                    LabelSpec(name=row.pop('name'),
+                              keyboard=row.pop('keyboard'),
+                              idx=int(row.pop('index')),
+                              description_short=row.pop('description_short'),
+                              description_long=row.pop('description_long'),
+                              ui_row=row.pop('row', 0),
+                              color=row.pop('color'),
+                              extra=row))
         return labels
 
 
@@ -156,7 +151,8 @@ class SingleImageLabeler(SingleFileLabeler):
         percent_complete = '%.2f' % (100 * num_complete / total_images)
 
         images_to_label = [(key, self.key_to_url(key),
-                            self.review_annotation(key)) for key in image_keys]
+                            self.label_store.get_initial_label(key))
+                           for key in image_keys]
         return render_template('label_single_image.html',
                                num_left_images=total_images - num_complete,
                                num_total_images=total_images,
