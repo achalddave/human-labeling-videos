@@ -97,6 +97,13 @@ class AnchorPmkLabeler(SingleImageWithCaptionsLabeler):
         for key, value in label_infos.items():
             anchor, pmk = self.parse_key(key)
             labels = set(value['labels'])
+
+            # If a previous row in this page called this anchor bad, add
+            # anchor bad to this pmk pair as well.
+            if (anchor in to_propagate
+                    and self.anchor_bad_label in to_propagate[anchor]):
+                labels.add(self.anchor_bad_label)
+
             to_propagate[anchor] = {
                 'add': self.propagate_labels & labels,
                 'remove': self.propagate_labels - labels
