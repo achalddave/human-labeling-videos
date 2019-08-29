@@ -1,0 +1,49 @@
+{% import "macros.html" as macros %}
+<!DOCTYPE html>
+<head>
+  {{ macros.js_includes() }}
+  <script type='text/javascript' src='static/single_image_with_captions.js'></script>
+  {{ macros.css_includes() }}
+  <link rel='stylesheet' href='/static/anchor_pmk.css'>
+  <style type='text/css'>
+  .to-label-image-container {
+    height: 100%;
+    min-height: 100px;
+  }
+  
+  .to-label-container {
+    display: flex;
+    flex-direction: column;
+  }
+  </style>
+</head>
+
+<body>
+  {{ macros.progress(num_left_images, num_total_images, percent_complete) }}
+
+  <form method='Post' action='/submit'>
+  {% for (data_key, anchor_path, pmk_path, current_label, caption) in pairs_to_label %}
+  <div tabindex='0' class='data-label-container' id='{{data_key}}'>
+    <div class='to-label-container'>
+      <div class='to-label-image-container'>
+        <div style='width: 100%; height: 100%'><img class='to-label' src={{anchor_path}}></img></div>
+        <div style='width: 100%; height: 100%;''><img class='to-label' src={{pmk_path}}></img></div>
+      </div>
+      <div class='to-label-image-caption' style='font-size: 2em;'>
+        {{caption}}
+      </div>
+    </div>
+    {{ macros.label_search() }}
+    <div tabindex='-1' class='labels'>
+      {{ macros.label_buttons_new(data_key, labels, current_label) }}
+      {{ macros.notes(data_key, current_label) }}
+    </div>
+  </div>
+  {% endfor %}
+  {{ macros.error_div() }}
+  {{ macros.submit() }}
+  </form>
+
+  <img id='preview'></img>
+</body>
+</html>
