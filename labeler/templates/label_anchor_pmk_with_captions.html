@@ -15,6 +15,11 @@
     display: flex;
     flex-direction: column;
   }
+
+  .label-search, .notes {
+    display: inline-block;
+    width: 49%;
+  }
   </style>
 </head>
 
@@ -33,9 +38,9 @@
         {{caption}}
       </div>
     </div>
-    {{ macros.label_search() }}
     <div tabindex='-1' class='labels'>
-      {{ macros.label_buttons_new(data_key, labels, current_label) }}
+      {{ macros.label_buttons(data_key, labels, current_label) }}
+      {{ macros.label_search() }}
       {{ macros.notes(data_key, current_label) }}
     </div>
   </div>

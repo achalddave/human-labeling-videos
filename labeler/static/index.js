@@ -178,7 +178,7 @@ $(function() {
 
   $(".label-search").on("input", function() {
     let text = $(this).val();
-    let labels = $(this).siblings(".labels").find("label");
+    let labels = $(this).closest(".data-label-container").find("label");
     labels.each(function() {
       if ($(this).text().toLowerCase().includes(text.toLowerCase())) {
         $(this).css("opacity", 1);
