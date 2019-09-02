@@ -28,7 +28,7 @@ def load_labels(input_paths):
     for key, key_labels in labels.items():
         if len(key_labels) > 1:
             paths = [x[0] for x in key_labels]
-            logging.info(
+            logging.debug(
                 f'{key} labeled multiple times in {paths}; using latest '
                 f'label from {paths[-1]}.')
         labels[key] = key_labels[-1][1]
