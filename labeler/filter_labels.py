@@ -42,7 +42,8 @@ def filter_labels(labels,
                   must_not_have=[],
                   can_have=[],
                   must_have_one_of=False,
-                  unspecified_labels_policy='error'):
+                  unspecified_labels_policy='error',
+                  return_nonmatching=False):
     if file_logger is None:
         file_logger = logging.getLogger()
 
@@ -95,6 +96,7 @@ def filter_labels(labels,
     logging.info('CAN HAVE: %s', [label_names[x] for x in can_have_labels])
 
     valid_rows = []
+    invalid_rows = []
     for key, row in labels.items():
         row_labels = set(row['labels'])
         missing_labels = must_have_labels - row_labels
@@ -103,20 +105,26 @@ def filter_labels(labels,
             if missing_labels == must_have_labels:
                 file_logger.info('Label %s missing labels %s' % (pformat(
                     dict(row)), [label_names[x] for x in missing_labels]))
+                invalid_rows.append(row)
                 continue
         elif missing_labels:
             file_logger.info(
                 'Label %s missing labels %s' %
                 (pformat(dict(row)), [label_names[x] for x in missing_labels]))
+            invalid_rows.append(row)
             continue
         if unwanted_labels:
             file_logger.info(
                 'Label %s has unwanted labels %s' %
                 (pformat(dict(row)), [label_names[x]
                                       for x in unwanted_labels]))
+            invalid_rows.append(row)
             continue
         valid_rows.append(row)
-    return valid_rows
+    if return_nonmatching:
+        return valid_rows, invalid_rows
+    else:
+        return valid_rows
 
 
 def main():
