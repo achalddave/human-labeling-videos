@@ -7,10 +7,10 @@
   <link rel='stylesheet' href='/static/video_with_thumbnails.css'>
 </head>
 <body>
-  {{ macros.progress() }}
+  {{ macros.progress(num_left_videos, num_total_videos, percent_complete) }}
   <form method='Post' action='/submit'>
   {% for (data_key, video_path, current_label) in videos_to_label %}
-  <div class='data-label-container' id='{{data_key}}'>
+  <div tabindex='0' class='data-label-container' id='{{data_key}}'>
     <div class='to-label-container'>
       <div class='to-label-video-container'>
         <video muted loop controls class='to-label' src={{video_path}}></video>
@@ -18,7 +18,7 @@
       <div class='to-label-thumbnails-container' data-require-first-thumbnail={{require_first_thumbnail}} data-num-thumbnails={{num_thumbnails}}>
       </div>
     </div>
-    <div tabindex='0' class='labels'>
+    <div tabindex='-1' class='labels'>
       {{ macros.label_buttons(data_key, labels, current_label) }}
       {{ macros.notes(data_key, current_label) }}
     </div>
