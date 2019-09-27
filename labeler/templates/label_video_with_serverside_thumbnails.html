@@ -6,9 +6,9 @@
 <link rel='stylesheet' href='/static/video_with_thumbnails.css'>
 </head>
 <body>
-  {{ macros.progress(num_left_videos, num_total_videos, percent_complete) }}
+  {{ macros.progress(num_left, num_total, percent_complete) }}
   <form method='Post' action='/submit'>
-  {% for (data_key, video_path, thumbnails, current_label) in videos_to_label %}
+  {% for (data_key, video_path, thumbnails, current_label) in to_label %}
   <div class='data-label-container' id='{{data_key}}'>
     <div class='to-label-container'>
       <div class='to-label-video-container'>

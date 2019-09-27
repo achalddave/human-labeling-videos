@@ -111,9 +111,9 @@ class SingleVideoWithThumbnailsLabeler(SingleFileLabeler):
                            for key in video_keys]
         return flask.render_template(
             'label_video_with_serverside_thumbnails.html',
-            num_left_videos=total_videos - num_complete,
-            num_total_videos=total_videos,
+            num_left=total_videos - num_complete,
+            num_total=total_videos,
             percent_complete='%.2f' % percent_complete,
-            videos_to_label=videos_to_label,
+            to_label=videos_to_label,
             image_thumbnails=self.thumb_duration == 0,
             labels=self.labels_by_row())

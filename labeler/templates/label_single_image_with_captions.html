@@ -19,10 +19,10 @@
 </head>
 
 <body>
-  {{ macros.progress(num_left_images, num_total_images, percent_complete) }}
+  {{ macros.progress(num_left, num_total, percent_complete) }}
 
   <form method='Post' action='/submit'>
-  {% for (data_key, image_path, current_label, caption) in images_to_label %}
+  {% for (data_key, image_path, current_label, caption) in to_label %}
   <div tabindex='0' class='data-label-container' id='{{data_key}}'>
     <div class='to-label-container'>
       <div class='to-label-image-container'>

@@ -31,11 +31,11 @@ class SingleVideoWithThumbnailsLabeler(SingleVideoLabeler):
                            for key in video_keys]
         return render_template(
             'label_video_with_thumbnails.html',
-            num_left_videos=total_videos - num_complete,
-            num_total_videos=total_videos,
+            num_left=total_videos - num_complete,
+            num_total=total_videos,
             num_thumbnails=self.num_thumbnails,
             percent_complete='%.2f' % percent_complete,
-            videos_to_label=videos_to_label,
+            to_label=videos_to_label,
             require_first_thumbnail=('true' if self.require_first_thumbnail
                                      else 'false'),
             labels=self.labels_by_row())

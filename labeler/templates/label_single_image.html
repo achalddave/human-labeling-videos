@@ -6,9 +6,9 @@
   <link rel='stylesheet' href='/static/single_image.css'>
 </head>
 <body>
-  {{ macros.progress(num_left_images, num_total_images, percent_complete) }}
+  {{ macros.progress(num_left, num_total, percent_complete) }}
   <form method='Post' action='/submit'>
-  {% for (data_key, image_path, current_label) in images_to_label %}
+  {% for (data_key, image_path, current_label) in to_label %}
   <div class='data-label-container' id='{{data_key}}'>
     <div class='to-label-container'>
       <div class='to-label-image-container'>

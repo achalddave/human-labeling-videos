@@ -82,8 +82,8 @@ class AnchorPmkLabeler(SingleImageWithCaptionsLabeler):
                  self.label_store.get_initial_label(key), captions[key]))
 
         return render_template('label_anchor_pmk_with_captions.html',
-                               num_left_images=total_images - num_complete,
-                               num_total_images=total_images,
+                               num_left=total_images - num_complete,
+                               num_total=total_images,
                                percent_complete='%.2f' %
                                (100 * num_complete / total_images),
                                pairs_to_label=pairs_to_label,

@@ -28,9 +28,9 @@
 {% endfor %}
 {% endmacro %}
 
-{% macro progress(num_left_images, num_total_images, percent_complete) %}
+{% macro progress(num_left, num_total, percent_complete) %}
   <div id='progress'>
-      Images left: {{num_left_images}}/{{num_total_images}}
+      Images left: {{num_left}}/{{num_total}}
       ({{percent_complete}}% complete)
   </div>
 {% endmacro %}

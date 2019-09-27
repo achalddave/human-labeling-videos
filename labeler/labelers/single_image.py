@@ -154,8 +154,8 @@ class SingleImageLabeler(SingleFileLabeler):
                             self.label_store.get_initial_label(key))
                            for key in image_keys]
         return render_template('label_single_image.html',
-                               num_left_images=total_images - num_complete,
-                               num_total_images=total_images,
+                               num_left=total_images - num_complete,
+                               num_total=total_images,
                                percent_complete=percent_complete,
-                               images_to_label=images_to_label,
+                               to_label=images_to_label,
                                labels=self.labels_by_row())

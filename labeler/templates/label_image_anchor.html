@@ -6,10 +6,10 @@
   <link rel='stylesheet' href='/static/image_anchor.css'>
 </head>
 <body>
-  {{ macros.progress(num_left_images, num_total_images, percent_complete) }}
+  {{ macros.progress(num_left, num_total, percent_complete) }}
   <form method='Post' action='/submit'>
   {% for (image_anchor_key, image_path, image_labels,
-          anchor_path, anchor_labels, current_label) in images_to_label %}
+          anchor_path, anchor_labels, current_label) in to_label %}
   <div class='image-label-container' id='{{image_anchor_key}}'>
     <div class='to-label-container'>
       <div class='anchor-image-container'>

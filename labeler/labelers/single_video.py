@@ -32,8 +32,8 @@ class SingleVideoLabeler(SingleFileLabeler):
                             self.label_store.get_initial_label(key))
                            for key in video_keys]
         return render_template('label_single_video.html',
-                               num_left_videos=total_videos - num_complete,
-                               num_total_videos=total_videos,
+                               num_left=total_videos - num_complete,
+                               num_total=total_videos,
                                percent_complete='%.2f' % percent_complete,
-                               videos_to_label=videos_to_label,
+                               to_label=videos_to_label,
                                labels=self.labels_by_row())

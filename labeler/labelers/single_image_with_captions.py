@@ -48,9 +48,9 @@ class SingleImageWithCaptionsLabeler(SingleImageLabeler):
                             captions[key]) for key in image_keys]
 
         return render_template('label_single_image_with_captions.html',
-                               num_left_images=total_images - num_complete,
-                               num_total_images=total_images,
+                               num_left=total_images - num_complete,
+                               num_total=total_images,
                                percent_complete='%.2f' %
                                (100 * num_complete / total_images),
-                               images_to_label=images_to_label,
+                               to_label=images_to_label,
                                labels=labels_by_row)
