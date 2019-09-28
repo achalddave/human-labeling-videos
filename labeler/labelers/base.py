@@ -13,6 +13,6 @@ class Labeler(ABC):
     @abstractmethod
     def submit(self, info):
         pass
-    
+
     def public_directories(self):
         return []
