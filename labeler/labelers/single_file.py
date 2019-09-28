@@ -4,11 +4,11 @@ import shutil
 from pathlib import Path
 from typing import NamedTuple, Optional
 
-from flask import render_template
+from flask import abort, render_template
 
 from labeler.labelers.base import Labeler
 from labeler.label_stores.json_label_store import JsonLabelStore
-from labeler.utils.fs import get_files, IMAGE_EXTENSIONS
+from labeler.utils.fs import get_files, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 
 
 class LabelSpec(NamedTuple):
@@ -28,11 +28,15 @@ class SingleFileLabeler(Labeler):
                  extensions,
                  labels_csv,
                  output_dir,
+                 template=None,
+                 template_extra_args={},
                  num_items=10,
                  review_labels=None):
         keys = [x.relative_to(root) for x in get_files(Path(root), extensions)]
         self.init_with_keys(root, keys, labels_csv, output_dir, num_items,
                             review_labels)
+        self.template = template
+        self.template_extra_args = template_extra_args
 
     def init_with_keys(self,
                        root,
@@ -130,6 +134,26 @@ class SingleFileLabeler(Labeler):
                               extra=row))
         return labels
 
+    def index(self):
+        if self.template is None:
+            abort(404)
+
+        keys = self.label_store.get_unlabeled(self.num_items)
+        total = self.label_store.num_total()
+        num_complete = self.label_store.num_completed()
+        percent_complete = '%.2f' % (100 * num_complete / total)
+
+        to_label = [(key, self.key_to_url(key),
+                     self.label_store.get_initial_label(key)) for key in keys]
+        print(self.labels_by_row())
+        return render_template(self.template,
+                               num_left=total - num_complete,
+                               num_total=total,
+                               percent_complete=percent_complete,
+                               to_label=to_label,
+                               labels=self.labels_by_row(),
+                               **self.template_extra_args)
+
 
 class SingleImageLabeler(SingleFileLabeler):
     def __init__(self,
@@ -142,20 +166,20 @@ class SingleImageLabeler(SingleFileLabeler):
                          extensions,
                          labels_csv,
                          output_dir,
+                         template='label_single_image.html',
                          review_labels=review_labels)
 
-    def index(self):
-        image_keys = self.label_store.get_unlabeled(self.num_items)
-        total_images = self.label_store.num_total()
-        num_complete = self.label_store.num_completed()
-        percent_complete = '%.2f' % (100 * num_complete / total_images)
 
-        images_to_label = [(key, self.key_to_url(key),
-                            self.label_store.get_initial_label(key))
-                           for key in image_keys]
-        return render_template('label_single_image.html',
-                               num_left=total_images - num_complete,
-                               num_total=total_images,
-                               percent_complete=percent_complete,
-                               to_label=images_to_label,
-                               labels=self.labels_by_row())
+class SingleVideoLabeler(SingleFileLabeler):
+    def __init__(self,
+                 root,
+                 labels_csv,
+                 output_dir,
+                 num_items=10,
+                 extensions=VIDEO_EXTENSIONS):
+        super().__init__(root,
+                         extensions,
+                         labels_csv,
+                         output_dir,
+                         template='label_single_video.html',
+                         num_items=num_items)

@@ -10,7 +10,7 @@ import flask
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from PIL import Image
 
-from labeler.labelers.single_image import SingleFileLabeler
+from labeler.labelers.single_file import SingleFileLabeler
 from labeler.label_stores.json_label_store import JsonLabelStore
 from labeler.utils.fs import VIDEO_EXTENSIONS
 from labeler.utils import video as video_utils

@@ -1,6 +1,4 @@
-from flask import render_template
-
-from labeler.labelers.single_video import SingleVideoLabeler
+from labeler.labelers.single_file import SingleVideoLabeler
 from labeler.utils.fs import VIDEO_EXTENSIONS
 
 
@@ -13,29 +11,15 @@ class SingleVideoWithThumbnailsLabeler(SingleVideoLabeler):
                  require_first_thumbnail=False,
                  extensions=VIDEO_EXTENSIONS,
                  num_items=10):
+        template_args = {
+            'num_thumbnails': num_thumbnails,
+            'require_first_thumbnail': (
+                'true' if require_first_thumbnail else 'false')
+        }
         super().__init__(root=root,
                          labels_csv=labels_csv,
                          extensions=extensions,
                          output_dir=output_dir,
+                         template='label_video_with_thumbnails.html',
+                         template_extra_args=template_args,
                          num_items=num_items)
-        self.require_first_thumbnail = require_first_thumbnail
-        self.num_thumbnails = num_thumbnails
-
-    def index(self):
-        video_keys = self.label_store.get_unlabeled(self.num_items)
-        total_videos = self.label_store.num_total()
-        num_complete = self.label_store.num_completed()
-        percent_complete = 100 * num_complete / max(total_videos, 1e-9)
-        videos_to_label = [(key, self.key_to_url(key),
-                            self.label_store.get_initial_label(key))
-                           for key in video_keys]
-        return render_template(
-            'label_video_with_thumbnails.html',
-            num_left=total_videos - num_complete,
-            num_total=total_videos,
-            num_thumbnails=self.num_thumbnails,
-            percent_complete='%.2f' % percent_complete,
-            to_label=videos_to_label,
-            require_first_thumbnail=('true' if self.require_first_thumbnail
-                                     else 'false'),
-            labels=self.labels_by_row())

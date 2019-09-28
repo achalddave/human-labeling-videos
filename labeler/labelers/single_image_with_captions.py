@@ -4,7 +4,7 @@ from pathlib import Path
 from flask import render_template
 
 from ..label_stores.json_label_store import JsonLabelStore
-from .single_image import SingleImageLabeler
+from .single_file import SingleImageLabeler
 
 
 class SingleImageWithCaptionsLabeler(SingleImageLabeler):
