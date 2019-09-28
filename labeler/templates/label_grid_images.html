@@ -1,0 +1,33 @@
+{% import "macros.html" as macros %}
+<!DOCTYPE html>
+<head>
+  {{ macros.js_includes() }}
+  {{ macros.css_includes() }}
+  <link rel='stylesheet' href='/static/image_grid.css'>
+</head>
+<body>
+  {{ macros.progress(num_left, num_total, percent_complete) }}
+  <form method='Post' action='/submit'>
+  <div class='grid-container'>
+  {% for (data_key, image_path, current_label) in to_label %}
+  <div class='data-label-container' id='{{data_key}}'>
+    <div class='to-label-container'>
+      <div class='to-label-image-container'>
+        <img class='to-label' src={{image_path}}></img>
+      </div>
+    </div>
+    <div tabindex='0' class='labels'>
+      {{ macros.label_buttons(data_key, labels, current_label) }}
+      {% if show_notes %}
+      {{ macros.notes(data_key, current_label) }}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  </div>
+  {{ macros.error_div() }}
+  {{ macros.submit() }}
+  </form>
+  <img id='preview'></img>
+</body>
+</html>
