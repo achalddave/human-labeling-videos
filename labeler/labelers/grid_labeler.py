@@ -1,4 +1,5 @@
 from labeler.labelers.single_file import SingleFileLabeler
+from labeler.utils import fs
 
 
 class GridLabeler(SingleFileLabeler):
@@ -11,7 +12,7 @@ class GridLabeler(SingleFileLabeler):
         template_args = {'show_notes': show_notes}
         super().__init__(root=root,
                          labels_csv=labels_csv,
-                         extensions=('.gif'),
+                         extensions=fs.IMAGE_EXTENSIONS,
                          output_dir=output_dir,
                          template='label_grid_images.html',
                          template_extra_args=template_args,
