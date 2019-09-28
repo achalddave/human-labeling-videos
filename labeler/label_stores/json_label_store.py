@@ -28,6 +28,7 @@ class JsonLabelStore(LabelStore):
                  output_json=None,
                  extra_fields=[],
                  initial_labels=None,
+                 initial_keys_only=False,
                  seed=0):
         """
         Args:
@@ -58,11 +59,12 @@ class JsonLabelStore(LabelStore):
         # specified, or when `set_initial_label` is called, to avoid creating
         # infinite recursive initial label stores.
         if initial_labels is not None:
-            self.setup_initial_labels(initial_labels)
+            self.setup_initial_labels(initial_labels,
+                                      initial_keys_only=initial_keys_only)
         else:
             self.initial_labels = None
 
-    def setup_initial_labels(self, labels_path=None):
+    def setup_initial_labels(self, labels_path=None, initial_keys_only=False):
         if self.output is not None:
             output_json = self.output.with_name(self.output.stem +
                                                 "_initial.json")
@@ -75,6 +77,15 @@ class JsonLabelStore(LabelStore):
             self.initial_labels._load_from_disk(labels_path)
             if output_json.exists():
                 self.initial_labels._load_from_disk(output_json)
+            if initial_keys_only:
+                with open(labels_path, 'r') as f:
+                    keys = {x['key'] for x in json.load(f)['annotations']}
+                self.initial_labels.keys = set(keys)
+                self.keys = set(keys)
+                self.initial_labels.current_labels = [
+                    x for x in self.initial_labels.current_labels
+                    if x['key'] in keys
+                ]
 
     def _load_from_disk(self, output):
         with open(output, 'r') as f:

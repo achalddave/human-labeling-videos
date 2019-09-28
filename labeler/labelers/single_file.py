@@ -54,10 +54,8 @@ class SingleFileLabeler(Labeler):
             extra_fields=['notes'],
             labels=[x.name for x in self.labels],
             output_json=self.output_dir / 'labels.json',
-            initial_labels=review_labels)
-        if review_labels is not None:
-            self.label_store.keys = (
-                self.label_store.initial_labels.labeled_keys())
+            initial_labels=review_labels,
+            initial_keys_only=review_labels is not None)
 
         self.num_items = num_items
 
