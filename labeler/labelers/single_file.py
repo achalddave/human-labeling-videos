@@ -143,7 +143,6 @@ class SingleFileLabeler(Labeler):
 
         to_label = [(key, self.key_to_url(key),
                      self.label_store.get_initial_label(key)) for key in keys]
-        print(self.labels_by_row())
         return render_template(self.template,
                                num_left=total - num_complete,
                                num_total=total,
