@@ -42,6 +42,7 @@ function scrollToContainer(container) {
 $(function() {
   // var topSpace = 5;
   $('#preview-container').hide();
+  $('body').click(() => $('#preview-container').hide());
 
   $('video.to-label').each(function() {
     this.playbackRate = 2.0;
@@ -86,6 +87,8 @@ $(function() {
       scrollToContainer(toSelect);
       updateContainer(toSelect);
       // toSelect.scrollIntoView({'behavior': 'instant'});
+    } else if (event.key == 'o') {
+      $('.active').find('.to-label').click();  // open preview
     } else if (!isNaN(event.key)) {
       var label_index = parseInt(event.key);
       if (label_index == 0) {
@@ -144,7 +147,7 @@ $(function() {
   });
 
   var addedHandler = false;
-  $('.to-label-container img, .to-label-container .thumbnail').click(function() {
+  $('.to-label, .to-label-container .thumbnail').click(function() {
     var preview = $('#preview'),
         container = $('#preview-container');
     if (!addedHandler) {
@@ -153,12 +156,34 @@ $(function() {
       });
       addedHandler = true;
     }
-    var currentSrc = $(this).attr('src');
-    if (preview.is(':visible') && preview.attr('src') == currentSrc) {
+
+    var currentSrc = $(this).attr('data-preview') || $(this).attr('src');
+
+    if (
+      preview.length > 0 &&
+      preview.is(":visible") &&
+      preview.attr("src") == currentSrc
+    ) {
       container.hide();
     } else {
       container.show();
-      preview.attr('src', currentSrc).show();
+      let elementType = currentSrc.endsWith('.mp4') && 'video' || 'img';
+
+      if (
+        preview.length == 0 ||
+        preview[0].tagName.toLowerCase() !== elementType
+      ) {
+        container.empty();
+        if (elementType == "video") {
+          preview = $(
+            `<video autoplay muted loop controls id="preview"></video>`
+          );
+        } else {
+          preview = $(`<img id="preview"></img>`);
+        }
+        container.append(preview);
+      }
+      preview.attr("src", currentSrc).show();
       preview.css({ margin: "0 auto" });
       // if (preview.height() > 0.9 * $(window).height()) {
       //   // preview.css({'width': 'auto', 'height': '90%'});
@@ -169,6 +194,7 @@ $(function() {
       //   preview.css({'top': space.toString() + 'px'});
       // }
     }
+    return false;
   });
 
   $("#preview").click(function() {
