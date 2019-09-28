@@ -2,6 +2,8 @@ from pathlib import Path
 
 
 def get_files(root, extensions, recursive=True):
+    if isinstance(extensions, str):
+        extensions = [extensions]
     root = Path(root)
     all_files = root.rglob('*') if recursive else root.glob('*')
     return [
