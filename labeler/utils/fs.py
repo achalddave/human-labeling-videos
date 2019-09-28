@@ -10,5 +10,5 @@ def get_files(root, extensions, recursive=True):
 
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif',
-                    '.tiff', '.webp')
+                    '.tiff', '.webp', '.gif')
 VIDEO_EXTENSIONS = ('.mp4')
