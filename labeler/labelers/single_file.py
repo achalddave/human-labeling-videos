@@ -132,6 +132,9 @@ class SingleFileLabeler(Labeler):
                               extra=row))
         return labels
 
+    def update_template_args(self, template_kwargs):
+        return template_kwargs
+
     def index(self):
         if self.template is None:
             abort(404)
@@ -143,12 +146,16 @@ class SingleFileLabeler(Labeler):
 
         to_label = [(key, self.key_to_url(key),
                      self.label_store.get_initial_label(key)) for key in keys]
+        template_kwargs = {
+            'num_left': total - num_complete,
+            'num_total': total,
+            'percent_complete': percent_complete,
+            'to_label': to_label,
+            'labels': self.labels_by_row(),
+        }
+        template_kwargs = self.update_template_args(template_kwargs)
         return render_template(self.template,
-                               num_left=total - num_complete,
-                               num_total=total,
-                               percent_complete=percent_complete,
-                               to_label=to_label,
-                               labels=self.labels_by_row(),
+                               **template_kwargs,
                                **self.template_extra_args)
 
 
