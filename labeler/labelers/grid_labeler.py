@@ -10,8 +10,16 @@ class GridLabeler(SingleFileLabeler):
                  labels_csv,
                  output_dir,
                  show_notes=True,
-                 num_items=10):
-        template_args = {'show_notes': show_notes}
+                 num_items=10,
+                 cell_width=200,
+                 cell_height='auto'):
+        template_args = {
+            'show_notes': show_notes,
+            'ui': {
+                'cell_width': cell_width,
+                'cell_height': cell_height
+            }
+        }
         super().__init__(root=root,
                          labels_csv=labels_csv,
                          extensions=fs.IMAGE_EXTENSIONS,
@@ -28,8 +36,16 @@ class GridGifLabeler(SingleFileLabeler):
                  output_dir,
                  video_root=None,
                  show_notes=True,
-                 num_items=10):
-        template_args = {'show_notes': show_notes}
+                 num_items=10,
+                 cell_width=200,
+                 cell_height='auto'):
+        template_args = {
+            'show_notes': show_notes,
+            'ui': {
+                'cell_width': cell_width,
+                'cell_height': cell_height
+            }
+        }
         super().__init__(root=root,
                          labels_csv=labels_csv,
                          extensions=('.gif'),
@@ -94,8 +110,16 @@ class GridSummaryVideoLabeler(SingleFileLabeler):
                  output_dir,
                  full_video_root=None,
                  show_notes=True,
-                 num_items=10):
-        template_args = {'show_notes': show_notes}
+                 num_items=10,
+                 cell_width=200,
+                 cell_height='auto'):
+        template_args = {
+            'show_notes': show_notes,
+            'ui': {
+                'cell_width': cell_width,
+                'cell_height': cell_height
+            }
+        }
         super().__init__(root=root,
                          labels_csv=labels_csv,
                          extensions=('.mp4'),

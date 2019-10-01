@@ -4,6 +4,12 @@
   {{ macros.js_includes() }}
   {{ macros.css_includes() }}
   <link rel='stylesheet' href='/static/image_grid.css'>
+  <style type='text/css'>
+    .data-label-container {
+      width: {{ui['cell_width']}};
+      height: {{ui['cell_height']}};
+    }
+  </style>
 </head>
 <body>
   {{ macros.progress(num_left, num_total, percent_complete) }}
