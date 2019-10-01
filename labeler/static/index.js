@@ -105,7 +105,6 @@ $(function() {
     } else {
       var labelObjects = $('.active').find('input.keyboard-' + event.key);
       if (labelObjects.length != 0) {
-        console.log(labelObjects.length);
         labelObjects.prop('checked', !labelObjects.prop('checked'));
       } else {
         let newEvent = new CustomEvent('unhandledKey', { detail: event});
