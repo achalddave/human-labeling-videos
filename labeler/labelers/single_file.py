@@ -32,7 +32,10 @@ class SingleFileLabeler(Labeler):
                  template_extra_args={},
                  num_items=10,
                  review_labels=None):
-        keys = [x.relative_to(root) for x in get_files(Path(root), extensions)]
+        keys = [
+            str(x.relative_to(root))
+            for x in get_files(Path(root), extensions)
+        ]
         self.init_with_keys(root, keys, labels_csv, output_dir, num_items,
                             review_labels)
         self.template = template
