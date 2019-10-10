@@ -93,7 +93,7 @@ input[type='checkbox']:checked + .label-button {
 }
 
 .active {
-  border-left: solid 5px #756cff;
+  border-left: solid 5px #756cff !important;
   background: white;
 }
 
