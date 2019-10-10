@@ -199,6 +199,10 @@ $(function() {
       }
       preview.attr("src", currentSrc).show();
       preview.css({ margin: "0 auto" });
+      preview.focus();
+      if (elementType == 'video') {
+        preview[0].playbackRate = 2;
+      }
       // if (preview.height() > 0.9 * $(window).height()) {
       //   // preview.css({'width': 'auto', 'height': '90%'});
       //   var space = ($(window).width() - preview.width()) / 2;
