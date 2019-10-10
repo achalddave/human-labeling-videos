@@ -102,7 +102,7 @@ $(function() {
       }
       var label_object = labels.eq(label_index);
       label_object.prop('checked', !label_object.prop('checked'));
-    } else {
+    } else if (event.key.match(/^[a-z0-9]+/i)) {
       var labelObjects = $('.active').find('input.keyboard-' + event.key);
       if (labelObjects.length != 0) {
         labelObjects.prop('checked', !labelObjects.prop('checked'));
