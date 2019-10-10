@@ -145,6 +145,21 @@ $(function() {
     }
   });
 
+  $('#preview-container').keypress(function(event) {
+    let preview = $('#preview');
+    if (preview.length == 0 || !preview.is(':visible')) {
+      return
+    } else if (preview[0].tagName.toLowerCase() == 'video') {
+      if (event.key == '.') {
+        preview[0].currentTime += 1;
+        event.preventDefault();
+      } else if (event.key == ',') {
+        preview[0].currentTime -= 1;
+        event.preventDefault();
+      }
+    }
+  });
+
   var addedHandler = false;
   $('.to-label, .to-label-container .thumbnail').click(function() {
     var preview = $('#preview'),
