@@ -69,11 +69,12 @@ class JsonLabelStore(LabelStore):
         if self.output is not None:
             output_json = self.output.with_name(self.output.stem +
                                                 "_initial.json")
-        self.initial_labels = JsonLabelStore(self.keys,
-                                             self.valid_labels,
-                                             output_json=output_json,
-                                             extra_fields=self.extra_fields,
-                                             seed=self.seed)
+        # Use type(self) to allow subclasses to re-use this method.
+        self.initial_labels = type(self)(self.keys,
+                                         self.valid_labels,
+                                         output_json=output_json,
+                                         extra_fields=self.extra_fields,
+                                         seed=self.seed)
         if labels_path is not None:
             self.initial_labels._load_from_disk(labels_path)
             if output_json.exists():
