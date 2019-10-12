@@ -3,6 +3,10 @@ function seekToStep(container, step) {
     video.currentTime = container.find(`.timeline-step-${step}`).attr('data-time');
 }
 
+function getContainer(elem) {
+    return elem.closest('.to-label-container');
+}
+
 function drawBoxes(container, step) {
     // Find any active boxes to draw at step `step`
     // Draw boxes to canvas
@@ -18,10 +22,15 @@ function drawBoxes(container, step) {
         let boxInfo = videoBoxes[videoSelector][boxId];
         ctx.globalAlpha = 0.3;
         if (step in boxInfo['boxes']) {
-            let box = boxInfo['boxes'][step];
+            let box = boxInfo['normalizedBoxes'][step];
             ctx.beginPath();
             ctx.fillStyle = boxInfo['color'];
-            ctx.rect(box[0], box[1], box[2], box[3]);
+            ctx.rect(
+              box[0] * canvas.width,
+              box[1] * canvas.height,
+              box[2] * canvas.width,
+              box[3] * canvas.height
+            );
             ctx.fill();
             ctx.closePath();
         }
@@ -31,7 +40,6 @@ function drawBoxes(container, step) {
 function playVideoSteps(container) {
     let previousInterval = container.data().playInterval;
     if (previousInterval !== undefined) {
-        console.log('Clearing interval');
         clearInterval(previousInterval);
         container.removeData('playInterval');
     }
@@ -47,9 +55,7 @@ function playVideoSteps(container) {
             step = 0;
         }
         let stepElement = container.find(`.timeline-step-valid`).eq(step);
-        console.log(stepElement.attr("data-time"));
         video.currentTime = stepElement.attr("data-time");
-        console.log(stepElement.attr("data-time"));
         step++;
     }, 1000);
     container.data('playInterval', interval);
@@ -61,7 +67,7 @@ function selectBox(boxElement) {
     jBox.addClass('box-element-active');
 
     // Set all timeline steps to be invalid
-    let container = jBox.closest('.to-label-video-container');
+    let container = getContainer(jBox);
     let timeline = container.find('.timeline');
     timeline.find(".timeline-step").removeClass("timeline-step-valid");
 
@@ -74,7 +80,6 @@ function selectBox(boxElement) {
     );
 
     // Start playing the video.
-    console.log('Playing video')
     playVideoSteps(container);
 }
 
@@ -89,6 +94,21 @@ $(function() {
     });
 
     for (const [video, boxes] of Object.entries(videoBoxes)) {
+        let videoSelector = $.escapeSelector(video);
+        let videoElem = $(`#${videoSelector} video`)[0];
+        for (const [boxId, boxInfo] of Object.entries(boxes)) {
+            let boxSteps = boxInfo['boxes']
+            let normalized = {}
+            Object.entries(boxSteps).forEach(function([step, box]) {
+                normalized[step] = [
+                  box[0] / videoElem.videoWidth,
+                  box[1] / videoElem.videoHeight,
+                  box[2] / videoElem.videoWidth,
+                  box[3] / videoElem.videoHeight
+                ];
+            })
+            boxInfo['normalizedBoxes'] = normalized;
+        }
         let boxHtml = Object.keys(boxes)
           .map(
             boxid => `<div data-video='${video}'
@@ -99,10 +119,10 @@ $(function() {
                       <div class='box-name'>${boxid}</div>
                       <input type='text' 
                              id='${boxid}-label'
+                             name='${video}__${boxid}'
                              class='box-label'></input>
                       </div>`)
           .join("\n");
-        let videoSelector = $.escapeSelector(video);
         $(`#${videoSelector} .boxes`).append(boxHtml);
     }
     $('.box-element').addClass('box-element-active');
@@ -113,7 +133,7 @@ $(function() {
     $('.box-element').click(function() { selectBox(this); });
 
     $('.timeline').each(function() {
-        let container = $(this).closest(".to-label-video-container");
+        let container = $(this).closest(".to-label-container");
         let video = container.find("video")[0];
         let numSteps = Math.floor(video.duration);
         for (let i = 0; i < numSteps; ++i) {
@@ -130,20 +150,20 @@ $(function() {
     $('.timeline-step').click(function() {
         let jThis = $(this);
         let step = jThis.attr('data-step');
-        let container = jThis.closest('.to-label-video-container');
+        let container = getContainer(jThis);
         seekToStep(container, step);
         drawBoxes(container, step);
     })
 
     $('.play-steps').click(function() {
-        playVideoSteps($(this).closest('.to-label-video-container'));
+        playVideoSteps(getContainer($(this)));
     })
 
     // This will only trigger when controls are off, i.e., when we are playing
     // the video automatically at steps.
     $('video').unbind('click');
     $('video').click(function() {
-        let container = $(this).closest('.to-label-video-container');
+        let container = getContainer($(this));
         let previousInterval = container.data('playInterval');
         if (previousInterval !== undefined) {
             console.log('Clearing interval from play/pause event');
@@ -156,7 +176,7 @@ $(function() {
     });
 
     $('video').bind('timeupdate', function() {
-        let container = $(this).closest('.to-label-video-container');
+        let container = getContainer($(this));
         container.find('.timeline-step').removeClass('timeline-step-active');
         let time = this.currentTime;
         let step = Math.round(time * Math.floor(this.duration) / this.duration);
@@ -165,4 +185,32 @@ $(function() {
           .addClass("timeline-step-active");
         drawBoxes(container, step);
     })
+
+    $('form').unbind('submit');
+    $('form').submit(function() {
+        console.log('submitting');
+        let emptyLabels = $("input.box-label").filter(function() {
+            return $.trim($(this).val()).length == 0;
+        });
+
+        if (emptyLabels.length == 0) {
+            $('#error').hide();
+            return true;
+        } else {
+            $("input.box-label").removeClass("container-error");
+            emptyLabels.addClass("container-error");
+
+            getContainer($("input.box-label")).removeClass("container-error");
+            getContainer(emptyLabels).addClass("container-error");
+            if (emptyLabels.length == 1) {
+                $("#error").html("One box is unlabeled, please fix.");
+            } else {
+            $("#error").html(
+                emptyLabels.length + " boxes unlabeled, please fix.");
+            }
+            $('#error').show()
+            return false;
+        }
+    });
+
 });

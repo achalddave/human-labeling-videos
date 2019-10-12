@@ -7,19 +7,7 @@
   <script type='text/javascript'>
   // Maps data key to list of boxes.
   // HACK: dummy data.
-  videoBoxes = {};
-  {% for data_key, video_path, current_label in to_label %}
-    videoBoxes['{{data_key}}'] = {
-      'box1': {
-        'boxes': {0: [0, 0, 20, 20], 1: [0, 0, 25, 25]},
-        'color': 'red'
-      },
-      'box2': {
-        'boxes': {0: [30, 40, 100, 100], 1: [40, 40, 110, 110]},
-        'color': 'blue'
-      }
-    };
-  {% endfor %}
+  videoBoxes = {{video_boxes | tojson}};
   </script>
   <script type='text/javascript' src='static/video_box_classification.js'>
   </script>
@@ -35,10 +23,10 @@
         <canvas tabindex='-1' class='box-overlay'></canvas>
         <video tabindex='-1' class='to-label' controls src={{video_path}}>
         </video>
-        <div class='boxes'></div>
-        <div class='timeline'></div>
-        <div class='play-steps'>Play steps</div>
       </div>
+      <div class='boxes'></div>
+      <div class='timeline'></div>
+      <div class='play-steps'>Play steps</div>
     </div>
     <div tabindex='-1' class='labels'>
       <!-- {{ macros.label_buttons(data_key, labels, current_label) }} -->
