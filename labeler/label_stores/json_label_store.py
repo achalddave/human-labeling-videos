@@ -3,6 +3,8 @@ import json
 import random
 from pathlib import Path
 
+from natsort import natsorted
+
 from labeler.label_stores.base import LabelStore
 
 
@@ -167,9 +169,10 @@ class JsonLabelStore(LabelStore):
     def labeled_keys(self):
         return {x['key'] for x in self.current_labels}
 
-    def get_unlabeled(self, num_items):
-        unlabeled = sorted(self.keys - self.labeled_keys())
-        random.Random(self.seed).shuffle(unlabeled)
+    def get_unlabeled(self, num_items, randomized=True):
+        unlabeled = natsorted(self.keys - self.labeled_keys())
+        if randomized:
+            random.Random(self.seed).shuffle(unlabeled)
         return unlabeled[:num_items]
 
     def num_completed(self):
