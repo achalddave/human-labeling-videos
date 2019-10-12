@@ -11,15 +11,14 @@ class JsonLabelStore(LabelStore):
 
     Structure of JSON file:
     {
-        "annotations": {
-            [
+        "annotations": [
+            {
                 "key": str,
                 "labels": List[int],
                 [extra_fields]: ...
-            ], ...
-        },
-        "labels": List[str],
-        ...
+            }, ...
+        ],
+        "labels": List[str]
     }
     """
     def __init__(self,
@@ -49,14 +48,11 @@ class JsonLabelStore(LabelStore):
         if self.output is not None and self.output.exists():
             self._load_from_disk(self.output)
         else:
+            # List of {'key': str, 'labels': List[int], <extra fields>} dicts.
             self.current_labels = []
 
-        # Initial labels maintains an "initial" label for each sample that is
-        # presented to the user when annotating. The user can either keep this
-        # label, or update it.
-        #
         # We create an initial labels store only if `initial_labels` is
-        # specified, or when `set_initial_label` is called, to avoid creating
+        # specified, or when `setup_initial_label` is called, to avoid creating
         # infinite recursive initial label stores.
         if initial_labels is not None:
             self.setup_initial_labels(initial_labels,
@@ -65,6 +61,11 @@ class JsonLabelStore(LabelStore):
             self.initial_labels = None
 
     def setup_initial_labels(self, labels_path=None, initial_keys_only=False):
+        """Setup label store for initial labels.
+
+        Initial labels maintains an "initial" label for each sample that is
+        presented to the user when annotating. The user can either keep this
+        label, or update it."""
         if self.output is not None:
             output_json = self.output.with_name(self.output.stem +
                                                 "_initial.json")
