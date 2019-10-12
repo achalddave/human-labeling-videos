@@ -1,0 +1,48 @@
+.box-element-active {
+    background: var(--color);
+    color: white;
+}
+
+.to-label-video-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.to-label {
+    min-height: 0;
+}
+
+.to-label-video-container canvas {
+    position: absolute;
+    pointer-events: none;
+}
+
+.timeline {
+    height: 20px;
+    width: 70vw;
+    display: flex;
+    flex-direction: row;
+    margin: 0 auto;
+}
+
+.timeline-step {
+    background: #aaa;
+    border-left: solid 1px white;
+    border-right: solid 1px white;
+    height: 90%;
+    width: 100%;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.timeline-step-valid {
+    background: black;
+}
+
+.timeline-step-active, .timeline-step-valid:hover {
+    /* height: 100%; */
+    border: solid 1px red;
+    height: 100%;
+    padding-left: 3px;
+}

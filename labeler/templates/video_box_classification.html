@@ -1,0 +1,55 @@
+{% import "macros.html" as macros %}
+<!DOCTYPE html>
+<head>
+  {{ macros.js_includes() }}
+  {{ macros.css_includes() }}
+  <link rel='stylesheet' href='/static/video_box_classification.css'>
+  <script type='text/javascript'>
+  // Maps data key to list of boxes.
+  // HACK: dummy data.
+  videoBoxes = {};
+  {% for data_key, video_path, current_label in to_label %}
+    videoBoxes['{{data_key}}'] = {
+      'box1': {
+        'boxes': {0: [0, 0, 20, 20], 1: [0, 0, 25, 25]},
+        'color': 'red'
+      },
+      'box2': {
+        'boxes': {0: [30, 40, 100, 100], 1: [40, 40, 110, 110]},
+        'color': 'blue'
+      }
+    };
+  {% endfor %}
+  </script>
+  <script type='text/javascript' src='static/video_box_classification.js'>
+  </script>
+</head>
+<body>
+  {{ macros.progress(num_left, num_total, percent_complete) }}
+
+  <form method='Post' action='/submit'>
+  {% for (data_key, video_path, current_label) in to_label %}
+  <div class='data-label-container' id='{{data_key}}'>
+    <div class='to-label-container'>
+      <div class='to-label-video-container'>
+        <canvas tabindex='-1' class='box-overlay'></canvas>
+        <video tabindex='-1' class='to-label' controls src={{video_path}}>
+        </video>
+        <div class='boxes'></div>
+        <div class='timeline'></div>
+        <div class='play-steps'>Play steps</div>
+      </div>
+    </div>
+    <div tabindex='-1' class='labels'>
+      <!-- {{ macros.label_buttons(data_key, labels, current_label) }} -->
+      {{ macros.notes(data_key, current_label) }}
+    </div>
+  </div>
+  {% endfor %}
+  {{ macros.error_div() }}
+  {{ macros.submit() }}
+  </form>
+  <div id='preview-container'>
+  </div>
+</body>
+</html>
