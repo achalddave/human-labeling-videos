@@ -86,8 +86,6 @@ $(function() {
           height: video[0].videoHeight,
           width: video[0].videoWidth
         });
-        let context = this.getContext('2d');
-        // context.fillRect(0, 0, this.width, this.height);
     });
 
     for (const [video, boxes] of Object.entries(videoBoxes)) {
