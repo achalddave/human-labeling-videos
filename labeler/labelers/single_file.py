@@ -97,6 +97,7 @@ class SingleFileLabeler(Labeler):
         })
         for key, value in form.items():
             file_key, info_key = key.rsplit('__', 1)
+            file_key = self.unescape_key(file_key)
             if info_key == 'notes':
                 label_infos[file_key]['notes'] = value
             else:
@@ -138,6 +139,15 @@ class SingleFileLabeler(Labeler):
     def update_template_args(self, template_kwargs):
         return template_kwargs
 
+    def escape_key(self, key):
+        # We use __ to separate the data key from the label information, e.g.,
+        # img02321__labels, so we have to make sure to escape this separator in
+        # the data keys.
+        return key.replace('__', r'\_\_')
+
+    def unescape_key(self, key):
+        return key.replace(r'\_\_', key)
+
     def index(self):
         if self.template is None:
             abort(404)
@@ -147,7 +157,7 @@ class SingleFileLabeler(Labeler):
         num_complete = self.label_store.num_completed()
         percent_complete = '%.2f' % (100 * num_complete / total)
 
-        to_label = [(key, self.key_to_url(key),
+        to_label = [(self.escape_key(key), self.key_to_url(key),
                      self.label_store.get_initial_label(key)) for key in keys]
         template_kwargs = {
             'num_left': total - num_complete,
