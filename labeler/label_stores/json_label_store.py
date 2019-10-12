@@ -162,7 +162,6 @@ class JsonLabelStore(LabelStore):
                 {'labels': List[int], [extra_fields]: ...}
         """
         if self.initial_labels is None:
-            print('Setting up initial labels')
             self.setup_initial_labels()
         return self.initial_labels.update(labels)
 
