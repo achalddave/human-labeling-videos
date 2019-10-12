@@ -4,13 +4,15 @@
 }
 
 .to-label-video-container {
-    display: flex;
-    flex-direction: column;
+    /* Allow canvas to be positioned / sized relative to this element. */
+    position: relative;
     height: 100%;
 }
 
-.to-label {
+.to-label, .to-label-video-container canvas {
     min-height: 0;
+    max-width: 100%;
+    height: 100%;
 }
 
 .to-label-video-container canvas {

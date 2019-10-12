@@ -83,8 +83,8 @@ $(function() {
         let jThis = $(this);
         let video = jThis.siblings('video');
         jThis.attr({
-            'height': video.height(),
-            'width': video.width()
+          height: video[0].videoHeight,
+          width: video[0].videoWidth
         });
         let context = this.getContext('2d');
         // context.fillRect(0, 0, this.width, this.height);
