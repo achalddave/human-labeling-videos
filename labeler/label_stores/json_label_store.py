@@ -95,10 +95,9 @@ class JsonLabelStore(LabelStore):
     def _load_from_disk(self, output):
         with open(output, 'r') as f:
             data = json.load(f)
+
         assert set(data.keys()) == {'annotations', 'labels'}
-
         assert data['labels'] == self.valid_labels
-
         for annotation in data['annotations']:
             key = annotation['key']
             assert key in self.keys, (
