@@ -92,6 +92,16 @@ class JsonLabelStore(LabelStore):
             if x['key'] in keys
         ]
 
+    def _check_annotation(self, annotation):
+        key = annotation['key']
+        assert key in self.keys, (
+            f"Could not find key {key} from previously saved labels in "
+            f"current list of keys to label.")
+        assert all(0 <= int(x) < len(self.valid_labels)
+                   for x in annotation['labels'])
+        assert set(annotation.keys()) == set(['labels', 'key'] +
+                                             self.extra_fields)
+
     def _load_from_disk(self, output):
         with open(output, 'r') as f:
             data = json.load(f)
@@ -99,14 +109,7 @@ class JsonLabelStore(LabelStore):
         assert set(data.keys()) == {'annotations', 'labels'}
         assert data['labels'] == self.valid_labels
         for annotation in data['annotations']:
-            key = annotation['key']
-            assert key in self.keys, (
-                f"Could not find key {key} from previously saved labels in "
-                f"current list of keys to label.")
-            assert all(0 <= int(x) < len(self.valid_labels)
-                       for x in annotation['labels'])
-            assert set(annotation.keys()) == set(['labels', 'key'] +
-                                                 self.extra_fields)
+            self._check_annotation(annotation)
 
         self.current_labels = data['annotations']
 
