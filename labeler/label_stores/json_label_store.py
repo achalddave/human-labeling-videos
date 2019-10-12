@@ -80,14 +80,17 @@ class JsonLabelStore(LabelStore):
             if output_json.exists():
                 self.initial_labels._load_from_disk(output_json)
             if initial_keys_only:
-                with open(labels_path, 'r') as f:
-                    keys = {x['key'] for x in json.load(f)['annotations']}
-                self.initial_labels.keys = set(keys)
-                self.keys = set(keys)
-                self.initial_labels.current_labels = [
-                    x for x in self.initial_labels.current_labels
-                    if x['key'] in keys
-                ]
+                self._remove_noninitial_keys(labels_path)
+
+    def _remove_noninitial_keys(self, initial_labels_path):
+        with open(initial_labels_path, 'r') as f:
+            keys = {x['key'] for x in json.load(f)['annotations']}
+        self.initial_labels.keys = set(keys)
+        self.keys = set(keys)
+        self.initial_labels.current_labels = [
+            x for x in self.initial_labels.current_labels
+            if x['key'] in keys
+        ]
 
     def _load_from_disk(self, output):
         with open(output, 'r') as f:
