@@ -121,7 +121,6 @@ $(function() {
   });
 
   $('form').submit(function() {
-    var error = false;
     var numUnlabeled = 0;
     $('.labels').each(function(i, labels) {
       if ($(labels).find('input:checked').length == 0) {
