@@ -85,8 +85,8 @@ class JsonLabelStore(LabelStore):
     def _remove_noninitial_keys(self, initial_labels_path):
         with open(initial_labels_path, 'r') as f:
             keys = {x['key'] for x in json.load(f)['annotations']}
-        self.initial_labels.keys = set(keys)
-        self.keys = set(keys)
+        self.initial_labels.keys = keys
+        self.keys = keys
         self.initial_labels.current_labels = [
             x for x in self.initial_labels.current_labels
             if x['key'] in keys
