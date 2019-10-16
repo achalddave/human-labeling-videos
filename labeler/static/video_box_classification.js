@@ -137,6 +137,14 @@ $(function() {
                       </div>`)
           .join("\n");
         $(`#${videoSelector} .boxes`).append(boxHtml);
+        if (!videoSteps.hasOwnProperty(video)) {
+            videoSteps[video] = {};
+            let videoElem = $(`#${videoSelector} video`)[0]
+            let numSteps = Math.round(videoElem.duration * ANNOTATION_FPS);
+            for (let i = 0; i < numSteps; ++i) {
+                videoSteps[video][i] = videoElem.duration / numSteps * i;
+            }
+        }
     }
     $('.box-element').addClass('box-element-active');
 
@@ -145,20 +153,18 @@ $(function() {
     });
     $('.box-element').click(function() { selectBox(this); });
 
-    $('.timeline').each(function() {
-        let container = $(this).closest(".to-label-container");
-        let video = container.find("video")[0];
-        let numSteps = Math.floor(video.duration);
-        for (let i = 0; i < numSteps; ++i) {
-            let time = video.duration / numSteps * i;
-            $(this).append(
-              `<div data-time='${time}'
-                    data-step='${i}'
-                    class='timeline-step timeline-step-${i}
-                           timeline-step-valid'></div>`
+    for (const video in videoSteps) {
+        let videoSelector = $.escapeSelector(video);
+        let timeline = $(`#${videoSelector} .timeline`);
+        for (const step in videoSteps[video]) {
+            timeline.append(
+              `<div data-time='${videoSteps[video][step]}'
+                    data-step='${step}'
+                    class='timeline-step timeline-step-${step}
+                        timeline-step-valid'></div>`
             );
         }
-    });
+    }
 
     $('.timeline-step').click(function() {
         let jThis = $(this);
@@ -192,7 +198,7 @@ $(function() {
         let container = getContainer($(this));
         container.find('.timeline-step').removeClass('timeline-step-active');
         let time = this.currentTime;
-        let step = Math.round(time * Math.floor(this.duration) / this.duration);
+        let step = Math.round(time * Math.round(this.duration) / this.duration);
         container
           .find(`.timeline-step-${step}`)
           .addClass("timeline-step-active");

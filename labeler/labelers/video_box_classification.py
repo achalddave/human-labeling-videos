@@ -81,6 +81,7 @@ class VideoBoxClassification(SingleFileLabeler):
                 self.escape_key(k): v
                 for k, v in self.boxes[key].items()
             }
+        template_kwargs['video_steps'] = {}
         return template_kwargs
 
     def parse_form(self, form):
