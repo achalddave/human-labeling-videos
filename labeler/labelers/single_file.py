@@ -146,7 +146,7 @@ class SingleFileLabeler(Labeler):
         return key.replace('__', r'\_\_')
 
     def unescape_key(self, key):
-        return key.replace(r'\_\_', key)
+        return key.replace(r'\_\_', '__')
 
     def index(self):
         if self.template is None:
