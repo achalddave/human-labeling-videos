@@ -1,9 +1,13 @@
 """Label boxes in a video with class labels."""
 
 import collections
+import itertools
 import json
+import math
 import shutil
 from pathlib import Path
+
+import numpy as np
 
 from .single_file import SingleFileLabeler
 from ..label_stores.grouped_label_store import GroupedLabelStore
@@ -125,3 +129,214 @@ class VideoBoxClassification(SingleFileLabeler):
                 label_infos[video_key]['labels'][box_key] = labels
                 label_infos[video_key]['other_labels'][box_key] = other_labels
         return label_infos
+
+
+class CocoVideoBoxClassification(VideoBoxClassification):
+    """Like VideoBoxClassification, but with COCO-style annotations input."""
+    def __init__(self,
+                 root,
+                 coco_json,
+                 vocabulary_json,
+                 labels_csv,
+                 output_dir,
+                 add_other_category=True,
+                 annotation_fps=1,
+                 num_items=10,
+                 extensions=VIDEO_EXTENSIONS):
+        with open(coco_json, 'r') as f:
+            data = json.load(f)
+        with open(vocabulary_json, 'r') as f:
+            self.vocabulary = json.load(f)['categories']
+        for c in self.vocabulary:
+            c['text'] = c['name']
+
+        """
+        COCO format:
+        {
+            'images': [{
+                'id': int,
+                'file_name': str,
+                'frame_index': int,
+                'video': str,
+                ...
+            }, ...],
+            'annotations': [{
+                'bbox': [x0, y0, w, h],
+                'track_id': int,
+                'image_id': int,
+                ...
+            }, ...]
+        }
+        Boxes format:
+            {
+                <video_key>: {
+                    <box_key>: {
+                        'boxes': { <step>: [x0, y0, w, h], ... },
+                        'color': <css-color>  // optional
+                    }, ...
+                }, ...
+            }
+        """
+        images = {}
+        for image in data['images']:
+            images[image['id']] = (image['video'], image['file_name'],
+                                   image['frame_index'])
+
+        root = Path(root)
+        video_colors = collections.defaultdict(lambda: itertools.cycle(
+            colormap(rgb=True)))
+        boxes = {}
+
+        video_info = {}
+        for annotation in data['annotations']:
+            video, frame_name, frame_index = images[annotation['image_id']]
+            if not (root / video).exists():
+                # Add extension if necessary
+                try:
+                    ext = next(x for x in VIDEO_EXTENSIONS
+                               if (root / f'{video}{x}').exists())
+                except StopIteration:
+                    raise ValueError(f'Could not find video {video} in {root}')
+                video = f'{video}{ext}'
+            if video not in video_info:
+                video_info[video] = get_video_info(str(root / video))
+            track_id = str(annotation['track_id'])
+            box = annotation['bbox']
+            if video not in boxes:
+                boxes[video] = {}
+            if track_id not in boxes[video]:
+                boxes[video][track_id] = {
+                    'boxes': {},
+                    'color': next(video_colors[video])
+                }
+            step_index = int(
+                round(frame_index / video_info[video]['fps'] * annotation_fps))
+            boxes[video][track_id]['boxes'][str(step_index)] = box
+
+        self.video_steps = {}
+        for video, info in video_info.items():
+            frames_between_steps = int(round(info['fps'])) * annotation_fps
+            step_to_time = {}
+            step_frames = list(
+                range(0, math.ceil(info['duration'] * info['fps']),
+                      frames_between_steps))
+            for step, frame in enumerate(step_frames):
+                step_to_time[step] = frame / info['fps']
+            if 'I0' in video:
+                print('Duration', info['duration'], 'fps', info['fps'],
+                      'step frames', step_frames, 'len', len(step_frames))
+            self.video_steps[video] = step_to_time
+        super().__init__(root, boxes, labels_csv, output_dir, num_items,
+                         extensions)
+
+    def update_template_args(self, template_kwargs):
+        template_kwargs = template_kwargs.copy()
+        template_kwargs['vocabulary'] = self.vocabulary
+        template_kwargs = super().update_template_args(template_kwargs)
+        template_kwargs['video_steps'] = self.video_steps
+        return template_kwargs
+
+
+def get_video_info(video):
+    from moviepy.video.io.ffmpeg_reader import ffmpeg_parse_infos
+    info = ffmpeg_parse_infos(video)
+    return {
+        'duration': info['duration'],
+        'fps': info['video_fps'],
+        'size': info['video_size']
+    }
+
+
+def colormap(rgb=False):
+    color_list = np.array(
+        [
+            0.000, 0.447, 0.741,
+            0.850, 0.325, 0.098,
+            0.929, 0.694, 0.125,
+            0.494, 0.184, 0.556,
+            0.466, 0.674, 0.188,
+            0.301, 0.745, 0.933,
+            0.635, 0.078, 0.184,
+            0.300, 0.300, 0.300,
+            0.600, 0.600, 0.600,
+            1.000, 0.000, 0.000,
+            1.000, 0.500, 0.000,
+            0.749, 0.749, 0.000,
+            0.000, 1.000, 0.000,
+            0.000, 0.000, 1.000,
+            0.667, 0.000, 1.000,
+            0.333, 0.333, 0.000,
+            0.333, 0.667, 0.000,
+            0.333, 1.000, 0.000,
+            0.667, 0.333, 0.000,
+            0.667, 0.667, 0.000,
+            0.667, 1.000, 0.000,
+            1.000, 0.333, 0.000,
+            1.000, 0.667, 0.000,
+            1.000, 1.000, 0.000,
+            0.000, 0.333, 0.500,
+            0.000, 0.667, 0.500,
+            0.000, 1.000, 0.500,
+            0.333, 0.000, 0.500,
+            0.333, 0.333, 0.500,
+            0.333, 0.667, 0.500,
+            0.333, 1.000, 0.500,
+            0.667, 0.000, 0.500,
+            0.667, 0.333, 0.500,
+            0.667, 0.667, 0.500,
+            0.667, 1.000, 0.500,
+            1.000, 0.000, 0.500,
+            1.000, 0.333, 0.500,
+            1.000, 0.667, 0.500,
+            1.000, 1.000, 0.500,
+            0.000, 0.333, 1.000,
+            0.000, 0.667, 1.000,
+            0.000, 1.000, 1.000,
+            0.333, 0.000, 1.000,
+            0.333, 0.333, 1.000,
+            0.333, 0.667, 1.000,
+            0.333, 1.000, 1.000,
+            0.667, 0.000, 1.000,
+            0.667, 0.333, 1.000,
+            0.667, 0.667, 1.000,
+            0.667, 1.000, 1.000,
+            1.000, 0.000, 1.000,
+            1.000, 0.333, 1.000,
+            1.000, 0.667, 1.000,
+            0.167, 0.000, 0.000,
+            0.333, 0.000, 0.000,
+            0.500, 0.000, 0.000,
+            0.667, 0.000, 0.000,
+            0.833, 0.000, 0.000,
+            1.000, 0.000, 0.000,
+            0.000, 0.167, 0.000,
+            0.000, 0.333, 0.000,
+            0.000, 0.500, 0.000,
+            0.000, 0.667, 0.000,
+            0.000, 0.833, 0.000,
+            0.000, 1.000, 0.000,
+            0.000, 0.000, 0.167,
+            0.000, 0.000, 0.333,
+            0.000, 0.000, 0.500,
+            0.000, 0.000, 0.667,
+            0.000, 0.000, 0.833,
+            0.000, 0.000, 1.000,
+            0.000, 0.000, 0.000,
+            0.143, 0.143, 0.143,
+            0.286, 0.286, 0.286,
+            0.429, 0.429, 0.429,
+            0.571, 0.571, 0.571,
+            0.714, 0.714, 0.714,
+            0.857, 0.857, 0.857,
+            1.000, 1.000, 1.000
+        ]
+    ).astype(np.float32)
+    color_list = color_list.reshape((-1, 3)) * 255
+    if not rgb:
+        color_list = color_list[:, ::-1]
+    color_list = [
+        "#{0:02x}{1:02x}{2:02x}".format(r, g, b)
+        for r, g, b in color_list.astype(int)
+    ]
+    print(color_list[:10])
+    return color_list
