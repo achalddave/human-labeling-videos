@@ -30,8 +30,11 @@ class VideoBoxClassification(SingleFileLabeler):
                     }, ...
                 }
         """
-        with open(boxes_json, 'r') as f:
-            self.boxes = json.load(f)
+        if isinstance(boxes_json, dict):
+            self.boxes = boxes_json
+        else:
+            with open(boxes_json, 'r') as f:
+                self.boxes = json.load(f)
 
         super().__init__(root,
                          extensions,
