@@ -6,8 +6,8 @@ import shutil
 from pathlib import Path
 
 from .single_file import SingleFileLabeler
-from ..utils.fs import VIDEO_EXTENSIONS
 from ..label_stores.grouped_label_store import GroupedLabelStore
+from ..utils.fs import VIDEO_EXTENSIONS
 
 
 class VideoBoxClassification(SingleFileLabeler):
