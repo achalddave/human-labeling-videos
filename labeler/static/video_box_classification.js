@@ -1,3 +1,5 @@
+let ANNOTATION_FPS = 1
+
 function seekToStep(container, step) {
     let video = container.find("video")[0];
     video.currentTime = container.find(`.timeline-step-${step}`).attr('data-time');
