@@ -168,9 +168,11 @@ class GridSummaryVideoLabeler(SingleFileLabeler):
         new_to_label = []
         for data in to_label:
             key, path, labels = data
-            video_path = self.video_paths.get(self.unescape_key(key), None)
-            new_to_label.append(
-                (key, path, labels, self.key_to_url(video_path,
-                                                    full_video=True)))
+            unescaped = self.unescape_key(key)
+            if unescaped in self.video_paths:
+                video_url = self.key_to_url(self.video_paths[unescaped], full_video=True)
+            else:
+                print(f'Found no full video for {unescaped}')
+            new_to_label.append((key, path, labels, video_url))
         kwargs['to_label'] = new_to_label
         return kwargs
