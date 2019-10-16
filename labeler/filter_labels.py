@@ -179,7 +179,7 @@ def main():
     logging.info(
         '%s/%s rows matched criterion' % (len(valid_rows), len(labels)))
     with open(args.output_labels, 'w') as f:
-        json.dump(valid_rows, f)
+        json.dump({'annotations': valid_rows, 'labels': labels_list}, f)
 
 
 if __name__ == "__main__":
