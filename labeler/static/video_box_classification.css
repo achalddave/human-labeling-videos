@@ -48,3 +48,12 @@
     height: 100%;
     padding-left: 3px;
 }
+
+select {
+    width: 80%;
+}
+
+.select2-word-def, .select2-word-synonyms {
+    font-size: 0.7em;
+    margin: 0;
+}

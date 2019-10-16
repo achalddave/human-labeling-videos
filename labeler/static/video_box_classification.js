@@ -226,4 +226,106 @@ $(function() {
         }
     });
 
+    function selectMatcher(params, data) {
+        // If there are no search terms, return all of the data
+        if ($.trim(params.term) === '') {
+          return data;
+        }
+
+        // Do not display the item if there is no 'text' property
+        if (typeof data.text === 'undefined') {
+          return null;
+        }
+
+        // `params.term` should be the term that is used for searching
+        // `data.text` is the text that is displayed for the data object
+        let query = params.term.toLowerCase();
+        let keys = ['name', 'synset', 'synonyms', 'def'];
+        let rank = -1;
+        for (let i = 0; i < keys.length; ++i) {
+            if (!data.hasOwnProperty(keys[i])) {
+                continue;
+            }
+            let value = '';
+            if (keys[i] == 'synonyms') {
+                value = data[keys[i]].join(' ');
+            } else {
+                value = data[keys[i]];
+            }
+            if (value.toLowerCase().indexOf(query) > -1) {
+                rank = keys.length - i;
+                break;
+            }
+        }
+        if (rank != -1 || !data.hasOwnProperty('name')) {
+            var modifiedData = $.extend(
+            {
+                rank: rank
+            }, data, true);
+            // You can return modified objects from here
+            // This includes matching the `children` how you want in nested data sets
+            return modifiedData;
+        }
+        return null;
+    }
+
+    function selectSorter(data) {
+        if (data[1].rank && !data[0].rank) {
+            // For tags
+            data[0].rank = -1;
+        }
+        if (data && data.length > 1 && data[0].rank) {
+          data.sort(function(a, b) {
+            return a.rank > b.rank ? -1 : b.rank > a.rank ? 1 : 0;
+          });
+        }
+        return data;
+    }
+
+    function selectTemplater(state) {
+        if (!state.id) {
+          return state.text;
+        }
+
+        if (!state.synset) {
+            return state.text;
+        }
+
+        var $state = $(
+          `<span class='select2-word-synset'>${state.synset}</span>
+          <span class='select2-word-name'>(${state.name})</span>
+          <div class='select2-word-def'>${state.def}</div>
+          <div class='select2-word-synonyms'>Synonyms: ${state.synonyms}</div>`);
+        return $state;
+      };
+
+    $('select.box-label').each(function() {
+        $(this).select2({
+          tags: true,
+          data: categories,
+          matcher: selectMatcher,
+          sorter: selectSorter,
+          templateResult: selectTemplater
+        });
+    });
+
+    // https://stackoverflow.com/a/49261426/1291812
+    // on first focus (bubbles up to document), open the menu
+    $(document).on('focus', '.select2-selection.select2-selection--single',
+    function (e) {
+        $(this)
+          .closest(".select2-container")
+          .siblings("select:enabled")
+          .select2("open");
+
+        selectBox($(this).closest('.box-element')[0]);
+    });
+
+    // steal focus during close - only capture once and stop propogation
+    $('select.select2').on('select2:closing', function (e) {
+        $(e.target).data("select2").$selection.one('focus focusin',
+            function (e) {
+                e.stopPropagation();
+            });
+    });
 });

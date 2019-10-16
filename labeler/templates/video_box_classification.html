@@ -4,10 +4,13 @@
   {{ macros.js_includes() }}
   {{ macros.css_includes() }}
   <link rel='stylesheet' href='/static/video_box_classification.css'>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/select2.min.js"></script>
   <script type='text/javascript'>
   // Maps data key to list of boxes.
   // HACK: dummy data.
   videoBoxes = {{video_boxes | tojson}};
+  categories = {{vocabulary | tojson}};
   </script>
   <script type='text/javascript' src='static/video_box_classification.js'>
   </script>
