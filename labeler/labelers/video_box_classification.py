@@ -103,7 +103,6 @@ class VideoBoxClassification(SingleFileLabeler):
             for i, x in enumerate(self.label_store.valid_labels)
         }
         for key, value in form.items():
-            print(key, value)
             video_key, info_key = key.rsplit('__', 2)
             video_key = self.unescape_key(video_key)
             if info_key == 'notes':
