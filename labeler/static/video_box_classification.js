@@ -20,9 +20,9 @@ function drawBoxes(container, step) {
         let videoSelector = jBoxElem.attr('data-video');
         let boxId = jBoxElem.attr('data-box-id');
         let boxInfo = videoBoxes[videoSelector][boxId];
-        ctx.globalAlpha = 0.3;
         if (step in boxInfo['boxes']) {
             let box = boxInfo['normalizedBoxes'][step];
+            ctx.globalAlpha = 0.3;
             ctx.beginPath();
             ctx.fillStyle = boxInfo['color'];
             ctx.rect(
@@ -32,6 +32,19 @@ function drawBoxes(container, step) {
               box[3] * canvas.height
             );
             ctx.fill();
+            ctx.closePath();
+
+            ctx.globalAlpha = 0.9;
+            ctx.beginPath();
+            ctx.strokeStyle = boxInfo['color'];
+            ctx.lineWidth = 3;
+            ctx.rect(
+              box[0] * canvas.width,
+              box[1] * canvas.height,
+              box[2] * canvas.width,
+              box[3] * canvas.height
+            );
+            ctx.stroke();
             ctx.closePath();
         }
     }
