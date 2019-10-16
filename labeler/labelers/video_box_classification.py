@@ -50,7 +50,10 @@ class VideoBoxClassification(SingleFileLabeler):
                        output_dir,
                        num_items=10,
                        review_labels=None):
-        grouped_keys = {k: set(self.boxes.get(k, {}).keys()) for k in keys}
+        grouped_keys = {
+            k: set(self.boxes[k].keys())
+            for k in keys if k in self.boxes
+        }
 
         self.root = Path(root)
         self.labels = SingleFileLabeler.load_label_spec(labels_csv)
