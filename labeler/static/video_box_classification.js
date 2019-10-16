@@ -130,10 +130,11 @@ $(function() {
                            style='--color: ${boxes[boxid]["color"]}'
                            class='box-element'>
                       <div class='box-name'>${boxid}</div>
-                      <input type='text' 
-                             id='${boxid}-label'
+                      <select id='${video}_${boxid}-label'
                              name='${video}__${boxid}'
-                             class='box-label'></input>
+                             class='box-label'>
+                             <option disabled selected value> -- label -- </option>
+                            </select>
                       </div>`)
           .join("\n");
         $(`#${videoSelector} .boxes`).append(boxHtml);
@@ -185,7 +186,6 @@ $(function() {
         let container = getContainer($(this));
         let previousInterval = container.data('playInterval');
         if (previousInterval !== undefined) {
-            console.log('Clearing interval from play/pause event');
             clearInterval(previousInterval);
             container.removeData('playInterval');
             this.pause();
@@ -207,8 +207,7 @@ $(function() {
 
     $('form').unbind('submit');
     $('form').submit(function() {
-        console.log('submitting');
-        let emptyLabels = $("input.box-label").filter(function() {
+        let emptyLabels = $(".box-label").filter(function() {
             return $.trim($(this).val()).length == 0;
         });
 
