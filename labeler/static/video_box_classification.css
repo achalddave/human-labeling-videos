@@ -16,17 +16,28 @@
     position: relative;
     height: 100%;
     min-height: 300px;
+    /* Vertically center align children */
+    display: flex;
+    align-items: center;
 }
 
 .to-label, .to-label-video-container canvas {
     min-height: 300px;
     max-width: 100%;
-    height: 100%;
+    max-height: 100%;
+    /* height: 100%; */
+    box-sizing: border-box;
+    margin: 0 auto;
 }
 
 .to-label-video-container canvas {
     position: absolute;
     pointer-events: none;
+    border-top: solid 1px black;
+    border-bottom: solid 1px black;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
 }
 
 .timeline {
@@ -66,4 +77,20 @@ select {
 .select2-word-def, .select2-word-synonyms {
     font-size: 0.7em;
     margin: 0;
+}
+
+.play-steps, .kill-tracks {
+    width: 500px;
+    text-align: center;
+    margin: 0 auto;
+    background: #ccc;
+    border: solid 1px black;
+}
+
+
+.congrats {
+    /* https://cssway.thebigerns.com/projects/css-fancy-text/ */
+    color: #fff;
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff, 0 0 40px #ff00de, 0 0 70px #ff00de, 0 0 80px #ff00de, 0 0 100px #ff00de, 0 0 150px #ff00de;
+    text-align: center;
 }
