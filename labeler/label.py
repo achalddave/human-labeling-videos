@@ -1,5 +1,6 @@
 """Image labeler interface."""
 import os
+import shutil
 from pathlib import Path
 
 import flask
@@ -15,6 +16,11 @@ app.config.from_pyfile(os.environ['FLASK_CONFIG'])
 cfg = app.config
 
 labeler = labeler_dict[cfg['LABELER_TYPE']](**cfg['LABELER_ARGS'])
+
+if 'output_dir' in cfg['LABELER_ARGS']:
+    output_dir = Path(cfg['LABELER_ARGS']['output_dir'])
+    config_path = Path(os.environ['FLASK_CONFIG'])
+    shutil.copy(config_path, output_dir / config_path.name)
 
 
 @app.route('/')
