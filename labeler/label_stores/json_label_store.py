@@ -175,7 +175,7 @@ class JsonLabelStore(LabelStore):
         return unlabeled[:num_items]
 
     def num_completed(self):
-        return len({x['key'] for x in self.current_labels})
+        return len({x['key'] for x in self.current_labels} & set(self.keys))
 
     def num_total(self):
         return len(self.keys)

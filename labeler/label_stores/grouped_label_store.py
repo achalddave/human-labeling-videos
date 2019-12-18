@@ -61,9 +61,11 @@ class GroupedLabelStore(JsonLabelStore):
 
     def _check_annotation(self, annotation):
         key = annotation['key']
-        assert key in self.keys, (
-            f"Could not find key {key} from previously saved labels in "
-            f"current list of keys to label.")
+        if key not in self.keys:
+            print('WARNING:'
+                  f"Could not find key {key} from previously saved labels in "
+                  f"current list of keys to label.")
+            return
 
         labeled_subkeys = set(annotation['labels'].keys())
         expected_subkeys = self.keys[key]
