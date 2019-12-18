@@ -12,7 +12,9 @@
   videoBoxes = {{video_boxes | tojson}};
   categories = {{vocabulary | tojson}};
   videoSteps = {{video_steps | tojson}};
+  videoStepFrames = {{ video_step_frames | tojson}};
   </script>
+  <script type='text/javascript' src='static/request_interval.js'></script>
   <script type='text/javascript' src='static/video_box_classification.js'>
   </script>
 </head>
@@ -25,12 +27,13 @@
     <div class='to-label-container'>
       <div class='to-label-video-container'>
         <canvas tabindex='-1' class='box-overlay'></canvas>
-        <video tabindex='-1' class='to-label' controls src={{video_path}}>
+        <video muted tabindex='-1' class='to-label' controls src={{video_path}}>
         </video>
       </div>
       <div class='boxes'></div>
       <div class='timeline'></div>
       <div class='play-steps'>Play steps</div>
+      <div class='kill-tracks' onclick="skipAll();">Skip all tracks</div>
     </div>
     <div tabindex='-1' class='labels'>
       <!-- {{ macros.label_buttons(data_key, labels, current_label) }} -->
