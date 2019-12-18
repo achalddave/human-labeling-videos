@@ -1,22 +1,63 @@
 let ANNOTATION_FPS = 1
 
+// Useful functions for console:
+// 1. Set all selects to skip:
+//    $('select').append(`<option value="skip">skip</option>`).val('skip')
+
+function skipAll() {
+    let confirmed = confirm('Skip all tracks?');
+    if (confirmed) {
+        $('select').append(`<option value='skip'>skip</option>`).val('skip')
+    }
+}
+
+function getVideoKey(elem) {
+    return elem.closest('.data-label-container').attr('id');
+}
+
 function seekToStep(container, step) {
     let video = container.find("video")[0];
-    video.currentTime = container.find(`.timeline-step-${step}`).attr('data-time');
+    video.currentTime = container
+      .find(`.timeline-step-${step}`)
+      .attr("data-time");
+}
+
+function getStepOffset(container, stepOffset) {
+    // Seek to offset stepOffset from current step. If there is no current step,
+    // seek to step 0.
+    let activeStep = container.find('.timeline-step-active');
+    let nextStep;
+    if (activeStep.length == 0) {
+        nextStep = 0;
+    } else {
+        let currentStep = parseInt(activeStep.attr('data-step'));
+        nextStep = currentStep + stepOffset;
+        let numSteps = container.find('.timeline-step').length;
+        if (nextStep < 0) {
+            nextStep = numSteps - nextStep;
+        } else if (nextStep >= numSteps) {
+            nextStep = nextStep % numSteps;
+        }
+    }
+    return nextStep;
 }
 
 function getContainer(elem) {
     return elem.closest('.to-label-container');
 }
 
-function drawBoxes(container, step) {
-    // Find any active boxes to draw at step `step`
-    // Draw boxes to canvas
-    let canvas = container.find('canvas')[0]
-    let ctx = canvas.getContext('2d');
+function getActiveContainer() {
+    return $('.data-label-container.active').find('.to-label-container');
+}
 
-    let activeBoxes = container.find('.box-element-active');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawBoxesHelper(canvas, activeBoxes, step) {
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'black';
+    // if (activeBoxes.length > 0) {
+    //     ctx.globalAlpha = 0.1;
+    //     ctx.rect(0, 0, canvas.width, canvas.height);
+    //     ctx.fill();
+    // }
     for (const boxElem of activeBoxes) {
         jBoxElem = $(boxElem);
         let videoSelector = jBoxElem.attr('data-video');
@@ -24,15 +65,16 @@ function drawBoxes(container, step) {
         let boxInfo = videoBoxes[videoSelector][boxId];
         if (step in boxInfo['boxes']) {
             let box = boxInfo['normalizedBoxes'][step];
-            ctx.globalAlpha = 0.3;
+            ctx.globalAlpha = 0.1;
             ctx.beginPath();
             ctx.fillStyle = boxInfo['color'];
-            ctx.rect(
+            [x0, y0, w, h] = [
               box[0] * canvas.width,
               box[1] * canvas.height,
               box[2] * canvas.width,
               box[3] * canvas.height
-            );
+            ];
+            ctx.rect(x0, y0, w, h);
             ctx.fill();
             ctx.closePath();
 
@@ -40,24 +82,65 @@ function drawBoxes(container, step) {
             ctx.beginPath();
             ctx.strokeStyle = boxInfo['color'];
             ctx.lineWidth = 3;
-            ctx.rect(
-              box[0] * canvas.width,
-              box[1] * canvas.height,
-              box[2] * canvas.width,
-              box[3] * canvas.height
-            );
+            ctx.rect(x0, y0, w, h);
             ctx.stroke();
             ctx.closePath();
         }
     }
 }
 
-function playVideoSteps(container) {
-    let previousInterval = container.data().playInterval;
-    if (previousInterval !== undefined) {
-        clearInterval(previousInterval);
-        container.removeData('playInterval');
+function drawBoxes(container, step, drawOriginalFrame) {
+    if (drawOriginalFrame === undefined) {
+        drawOriginalFrame = false;
     }
+
+    // Find any active boxes to draw at step `step`
+    // Draw boxes to canvas
+    let canvas = container.find('canvas')[0]
+    let ctx = canvas.getContext('2d');
+
+    let video = container.find('video')[0]
+    if (canvas.width != video.videoWidth) {
+        setupCanvas(canvas);
+    }
+
+    let activeBoxes = container.find('.box-element-active');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (drawOriginalFrame) {
+        // https://stackoverflow.com/a/4776378/1291812
+        let videoName = getVideoKey(container);
+        let img = videoStepImages[videoName][step];
+        let imgLoaded = img.complete && img.naturalHeight !== 0;
+        if (imgLoaded) {
+            ctx.globalAlpha = 1.0;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            drawBoxesHelper(canvas, activeBoxes, step);
+        } else {
+            img.onload = function() {
+                ctx.globalAlpha = 1.0;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                drawBoxesHelper(canvas, activeBoxes, step);
+            };
+        }
+    } else {
+        drawBoxesHelper(canvas, activeBoxes, step);
+    }
+
+}
+
+function stopStepPlayback(container) {
+    let handler = container.data().playTimeout;
+    if (handler !== undefined) {
+        clearRequestTimeout(handler);
+        container.removeData('playTimeout');
+        return true;
+    }
+    return false;
+}
+
+function playVideoSteps(container) {
+    stopStepPlayback(container);
     let jVideo = container.find('video'),
         video = jVideo[0];
 
@@ -65,19 +148,30 @@ function playVideoSteps(container) {
     jVideo.removeAttr('controls');
     let step = 0;
     let numSteps = container.find('.timeline-step-valid').length;
-    let interval = setInterval(function() {
+    function nextStep() {
+        if (video.seeking) {
+            let handler = requestTimeout(nextStep, 100);
+            container.data('playTimeout', handler);
+            return;
+        }
         if (step == numSteps) {
             step = 0;
         }
         let stepElement = container.find(`.timeline-step-valid`).eq(step);
         video.currentTime = stepElement.attr("data-time");
         step++;
-    }, 1000);
-    container.data('playInterval', interval);
+        let handler = requestTimeout(nextStep, 500);
+        container.data('playTimeout', handler);
+    }
+    nextStep();
 }
 
 function selectBox(boxElement) {
     let jBox = $(boxElement);
+    if ((jBox.hasClass('box-element-active')
+        && $('.box-element-active').length == 1)) {
+        return;
+    }
     jBox.siblings('.box-element').removeClass('box-element-active');
     jBox.addClass('box-element-active');
 
@@ -95,35 +189,77 @@ function selectBox(boxElement) {
     );
 
     // Start playing the video.
-    playVideoSteps(container);
+    // playVideoSteps(container);
+    console.log('Setting time')
+    let jVideo = container.find('video');
+    jVideo[0].pause();
+    seekToStep(container, boxSteps[0]);
+    jVideo[0].play();
+}
+
+function setupCanvas(canvas) {
+    let jCanvas = $(canvas);
+    let video = jCanvas.siblings('video');
+    let vh = video[0].videoHeight, vw = video[0].videoWidth;
+    jCanvas.attr({
+        height: vh,
+        width: vw
+    });
+    let videoName = getContainer(jCanvas).parent().attr('id');
+    normalizeBoxes(videoName);
+
+    /*
+    // 
+    // For portrait videos, fill the height. For landscape videos, fill
+    // the width. If we instead indiscriminately set height: 100%, and
+    // max-width to 100%, then the videos themselves will look fine, but
+    // the canvas and the video container will be taller than the actual
+    // video for landscape (wide) videos, which leads to a mismatch in
+    // the canvas location and video location.
+    if (vh > vw) {
+        video.css('height', '100%');
+        jThis.css('height', '100%');
+    } else {
+        video.css('width', '100%');
+        jThis.css('width', '100%');
+    }
+    */
+}
+
+function normalizeBoxes(videoName) {
+    let videoSelector = $.escapeSelector(videoName);
+    let videoElem = $(`#${videoSelector} video`)[0];
+    let boxes = videoBoxes[videoName];
+    for (const [_, boxInfo] of Object.entries(boxes)) {
+        let boxSteps = boxInfo['boxes']
+        let normalized = {}
+        Object.entries(boxSteps).forEach(function([step, box]) {
+            normalized[step] = [
+                box[0] / videoElem.videoWidth,
+                box[1] / videoElem.videoHeight,
+                box[2] / videoElem.videoWidth,
+                box[3] / videoElem.videoHeight
+            ];
+        })
+        boxInfo['normalizedBoxes'] = normalized;
+    }
 }
 
 $(function() {
-    $('canvas').each(function() {
-        let jThis = $(this);
-        let video = jThis.siblings('video');
-        jThis.attr({
-          height: video[0].videoHeight,
-          width: video[0].videoWidth
-        });
-    });
+    if ($('.data-label-container').length == 0) {
+        $('body').append('<h1 class="congrats">Congratulations. You\'re done!</h1>')
+        $('body').css('background', 'black');
+        $('body').append('<canvas id="fireworks">');
+        var s = document.createElement('script');
+        s.setAttribute('src', 'static/fireworks.js');
+        s.onload = function() { loop(); };
+        document.body.appendChild(s);
+    }
 
     for (const [video, boxes] of Object.entries(videoBoxes)) {
+        console.log('boxes', boxes);
+        console.log(`Found ${Object.keys(boxes).length} boxes.`)
         let videoSelector = $.escapeSelector(video);
-        let videoElem = $(`#${videoSelector} video`)[0];
-        for (const [boxId, boxInfo] of Object.entries(boxes)) {
-            let boxSteps = boxInfo['boxes']
-            let normalized = {}
-            Object.entries(boxSteps).forEach(function([step, box]) {
-                normalized[step] = [
-                  box[0] / videoElem.videoWidth,
-                  box[1] / videoElem.videoHeight,
-                  box[2] / videoElem.videoWidth,
-                  box[3] / videoElem.videoHeight
-                ];
-            })
-            boxInfo['normalizedBoxes'] = normalized;
-        }
         let boxHtml = Object.keys(boxes)
           .map(
             boxid => `<div data-video='${video}'
@@ -139,7 +275,10 @@ $(function() {
                             </select>
                       </div>`)
           .join("\n");
+        console.log('Appending boxHtml');
         $(`#${videoSelector} .boxes`).append(boxHtml);
+        console.log(video);
+        console.log(videoSteps);
         if (!videoSteps.hasOwnProperty(video)) {
             videoSteps[video] = {};
             let videoElem = $(`#${videoSelector} video`)[0]
@@ -154,18 +293,34 @@ $(function() {
     $('.box-label').focus(function() {
         selectBox($(this).closest('.box-element')[0]);
     });
-    $('.box-element').click(function() { selectBox(this); });
+    $('.box-element').click(function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            $(this).toggleClass('box-element-active');
+        } else {
+            selectBox(this);
+        }
+    });
 
+    window.videoStepImages = {}
     for (const video in videoSteps) {
         let videoSelector = $.escapeSelector(video);
         let timeline = $(`#${videoSelector} .timeline`);
+        videoStepImages[video] = {};
         for (const step in videoSteps[video]) {
+            let parts = videoStepFrames[video][step].split('/');
+            let frameName = parts[parts.length - 1];
+            let title = `frame=${frameName}, t=${videoSteps[video][step]}`;
             timeline.append(
               `<div data-time='${videoSteps[video][step]}'
                     data-step='${step}'
+                    title='${title}'
                     class='timeline-step timeline-step-${step}
                         timeline-step-valid'></div>`
             );
+            // Preload step image
+            let image = new Image;
+            image.src = videoStepFrames[video][step];
+            videoStepImages[video][step] = image;
         }
     }
 
@@ -174,37 +329,65 @@ $(function() {
         let step = jThis.attr('data-step');
         let container = getContainer(jThis);
         seekToStep(container, step);
-        drawBoxes(container, step);
+        // drawBoxes(container, step, /*drawOriginalFrame=*/true);
     })
 
     $('.play-steps').click(function() {
         playVideoSteps(getContainer($(this)));
     })
 
+    $('video').each(function() {
+        if (this.readyState == 4) {  // Already loaded
+            setupCanvas(getContainer($(this)).find('canvas')[0]);
+        }
+    });
+
+
     // This will only trigger when controls are off, i.e., when we are playing
     // the video automatically at steps.
     $('video').unbind('click');
     $('video').click(function() {
-        let container = getContainer($(this));
-        let previousInterval = container.data('playInterval');
-        if (previousInterval !== undefined) {
-            clearInterval(previousInterval);
-            container.removeData('playInterval');
-            this.pause();
-        }
+        stopStepPlayback(getContainer($(this)));
+        this.pause();
         $('video').attr('controls', '');
         return false;
     });
 
     $('video').bind('timeupdate', function() {
-        let container = getContainer($(this));
+        let jThis = $(this);
+        let container = getContainer(jThis);
         container.find('.timeline-step').removeClass('timeline-step-active');
+        let videoName = getVideoKey(container);
         let time = this.currentTime;
-        let step = Math.round(time * Math.round(this.duration) / this.duration);
+        let closestStep, closestStepDistance = Infinity;
+        for ([step, stepTime] of Object.entries(videoSteps[videoName])) {
+            let dist = Math.abs(stepTime - time)
+            if (dist < closestStepDistance) {
+                closestStepDistance = dist;
+                closestStep = step;
+            }
+        }
+
+        // // Pause once when we get close to the frame of interest. After that,
+        // // skip ahead so we don't pause again.
+        // let thresh = 0.05;
+        // if (!this.paused && closestStepDistance < thresh) {
+        //     this.pause();
+        //     seekToStep(container, videoSteps[videoName][closestStep]);
+        //     setTimeout(() => {
+        //         this.currentTime = time + thresh;
+        //         this.play();
+        //     }, 300);
+        // }
+
         container
-          .find(`.timeline-step-${step}`)
+          .find(`.timeline-step-${closestStep}`)
           .addClass("timeline-step-active");
-        drawBoxes(container, step);
+        // If we are close to a step and the video is paused, draw the original
+        // annotated frame image on the canvas.
+        let thresh = 0.05;
+        let drawOriginalFrame = (this.paused && closestStepDistance < thresh)
+        drawBoxes(container, closestStep, drawOriginalFrame);
     })
 
     $('form').unbind('submit');
@@ -233,7 +416,7 @@ $(function() {
         }
     });
 
-    function selectMatcher(params, data) {
+  function selectMatcher(params, data) {
         // If there are no search terms, return all of the data
         if ($.trim(params.term) === '') {
           return data;
@@ -306,15 +489,39 @@ $(function() {
         return $state;
       };
 
-    $('select.box-label').each(function() {
-        $(this).select2({
-          tags: true,
-          data: categories,
-          matcher: selectMatcher,
-          sorter: selectSorter,
-          templateResult: selectTemplater
-        });
-    });
+
+    let boxSelects = $('select.box-label');
+    function setupSelect2(elem) {
+        elem.select2({
+                    tags: true,
+                    data: categories,
+                    matcher: selectMatcher,
+                    sorter: selectSorter,
+                    templateResult: selectTemplater
+                })
+    }
+    // If there are many boxes, only initialize select2 when focused.
+    if (boxSelects.length > 20) {
+      boxSelects.focus(function() {
+        if (!$(this).hasClass("select2-hidden-accessible")) {
+          setupSelect2($(this));
+          $(this).focus();
+        }
+      });
+    } else {
+      setupSelect2(boxSelects);
+    }
+    // $('select.box-label').select2({
+    // });
+    // $('select.box-label').each(function() {
+    //     $(this).select2({
+    //       tags: true,
+    //       data: categories,
+    //       matcher: selectMatcher,
+    //       sorter: selectSorter,
+    //       templateResult: selectTemplater
+    //     });
+    // });
 
     // https://stackoverflow.com/a/49261426/1291812
     // on first focus (bubbles up to document), open the menu
@@ -334,5 +541,20 @@ $(function() {
             function (e) {
                 e.stopPropagation();
             });
+    });
+
+    window.addEventListener("unhandledKey", event => {
+      let rawEvent = event;
+      event = rawEvent.detail;  // original key event
+      let container = getActiveContainer();
+      if (event.key == '[' || event.key == ']') {
+          stopStepPlayback(container);
+          let jVideo = container.find('video');
+          jVideo[0].pause();
+          let offset = event.key == '[' ? -1 : 1;
+          let nextStep = getStepOffset(container, offset);
+          seekToStep(container, nextStep);
+          // drawBoxes(container, nextStep, /*drawOriginalFrame=*/true);
+      }
     });
 });
