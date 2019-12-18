@@ -68,7 +68,9 @@ $(function() {
     }
     let isOpen = false;
     $("select").each(function() {
-      isOpen = isOpen || $(this).select2("isOpen");
+      try {
+        isOpen = isOpen || $(this).select2("isOpen");
+      } catch (e) {}
     })
     if (isOpen) {
       return;
@@ -113,10 +115,10 @@ $(function() {
       var labelObjects = $('.active').find('input.keyboard-' + event.key);
       if (labelObjects.length != 0) {
         labelObjects.prop('checked', !labelObjects.prop('checked'));
-      } else {
+      }
+    } else {
         let newEvent = new CustomEvent('unhandledKey', { detail: event});
         window.dispatchEvent(newEvent);
-      }
     }
   });
 
