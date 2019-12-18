@@ -4,14 +4,17 @@ import collections
 import itertools
 import json
 import math
+import random
 import shutil
+from math import ceil, floor
 from pathlib import Path
 
 import numpy as np
+from tqdm import tqdm
 
 from .single_file import SingleFileLabeler
 from ..label_stores.grouped_label_store import GroupedLabelStore
-from ..utils.fs import VIDEO_EXTENSIONS
+from ..utils.fs import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 
 
 class VideoBoxClassification(SingleFileLabeler):
@@ -85,13 +88,13 @@ class VideoBoxClassification(SingleFileLabeler):
     def update_template_args(self, template_kwargs):
         template_kwargs = template_kwargs.copy()
         template_kwargs['video_boxes'] = {}
+        template_kwargs['video_steps'] = {}
         for escaped_key, _, _ in template_kwargs['to_label']:
             key = self.unescape_key(escaped_key)
             template_kwargs['video_boxes'][escaped_key] = {
                 self.escape_key(k): v
                 for k, v in self.boxes[key].items()
             }
-        template_kwargs['video_steps'] = {}
         return template_kwargs
 
     def parse_form(self, form):
@@ -135,14 +138,22 @@ class CocoVideoBoxClassification(VideoBoxClassification):
     """Like VideoBoxClassification, but with COCO-style annotations input."""
     def __init__(self,
                  root,
+                 frames_root,
                  coco_json,
                  vocabulary_json,
                  labels_csv,
                  output_dir,
-                 add_other_category=True,
+                 portion=(0, 1),
+                 portion_seed='NO_SHUFFLE',
                  annotation_fps=1,
                  num_items=10,
                  extensions=VIDEO_EXTENSIONS):
+        """
+        Args:
+            portion (start, end): Used to split up annotation tasks into
+                multiple servers (e.g., to split up tasks across 2 workers,
+                one server can be started with (0, 0.5), and another with (0.5, 1.0).
+        """
         with open(coco_json, 'r') as f:
             data = json.load(f)
         with open(vocabulary_json, 'r') as f:
@@ -177,19 +188,54 @@ class CocoVideoBoxClassification(VideoBoxClassification):
                 }, ...
             }
         """
+        root = Path(root)
+        self.frames_root = Path(frames_root)
+        # Map video to list of frames that were sent for annotation (`steps`)
+        video_frames = {}
         images = {}
         for image in data['images']:
             images[image['id']] = (image['video'], image['file_name'],
                                    image['frame_index'])
+            if image['video'] not in video_frames:
+                video_frames[image['video']] = []
+            video_frames[image['video']].append(image)
 
-        root = Path(root)
+        if portion != (0, 1):
+            orig_videos = sorted({x[0] for x in images.values()})
+            if portion_seed != 'NO_SHUFFLE':
+                random.Random(portion_seed).shuffle(orig_videos)
+            start_percent, end_percent = portion
+            start_index = int(ceil(start_percent * len(orig_videos)))
+            end_index = int(ceil(end_percent * len(orig_videos)))
+            # end_index will _not_ be included, so the user can spawn
+            # two separate servers with (0, 50) and (50, 100) without having
+            # any overlap.
+            videos = set(orig_videos[start_index:end_index])
+            print(f'Selected {len(videos)}/{len(orig_videos)}')
+            images = {k: v for k, v in images.items() if v[0] in videos}
+            data['annotations'] = [
+                x for x in data['annotations'] if x['image_id'] in images
+            ]
+            video_frames = {
+                k: v
+                for k, v in video_frames.items() if k in videos
+            }
+
         video_colors = collections.defaultdict(lambda: itertools.cycle(
-            colormap(rgb=True)))
+            colormap(rgb=True, skip_grays=True)))
         boxes = {}
 
         video_info = {}
-        for annotation in data['annotations']:
-            video, frame_name, frame_index = images[annotation['image_id']]
+        # For each video, map frame index to 'step index', which indexes into
+        # only the frames sent for annotation.
+        frame_to_step = {}
+        # For each video, map step index to time
+        self.video_steps = {}
+        # For each video, map step index to frame path.
+        self.video_step_frames = {}
+        video_with_extension = {}
+        for video, frames in tqdm(video_frames.items()):
+            orig_video = video
             if not (root / video).exists():
                 # Add extension if necessary
                 try:
@@ -198,8 +244,37 @@ class CocoVideoBoxClassification(VideoBoxClassification):
                 except StopIteration:
                     raise ValueError(f'Could not find video {video} in {root}')
                 video = f'{video}{ext}'
-            if video not in video_info:
-                video_info[video] = get_video_info(str(root / video))
+            video_with_extension[orig_video] = video
+            video_info[video] = get_video_info(str(root / video))
+            frame_to_step[video] = {}
+            self.video_steps[video] = {}
+            self.video_step_frames[video] = {}
+            frame0_path = Path(self.frames_root / frames[0]['file_name'])
+            if frame0_path.exists():
+                frame_ext = frame0_path.suffix
+            else:
+                try:
+                    frame_ext = next(x for x in IMAGE_EXTENSIONS
+                                     if frame0_path.with_suffix(x).exists())
+                except StopIteration:
+                    raise ValueError(
+                        f'Could not find frame {frame0_path} with any '
+                        f'extension')
+            for i, frame in enumerate(
+                    sorted(frames, key=lambda x: x['frame_index'])):
+                frame_idx = frame['frame_index']
+                frame_to_step[video][frame_idx] = i
+                self.video_steps[video][i] = (frame_idx /
+                                              video_info[video]['fps'])
+                frame_path = ('file/frame/' +
+                              frame['file_name'].rsplit('.', 1)[0] + frame_ext)
+                # assert frame_path.exists(), (
+                #     f'Could not find frame at {frame_path}')
+                self.video_step_frames[video][i] = frame_path
+
+        for annotation in tqdm(data['annotations'], desc='Processing videos'):
+            video, frame_name, frame_index = images[annotation['image_id']]
+            video = video_with_extension[video]
             track_id = str(annotation['track_id'])
             box = annotation['bbox']
             if video not in boxes:
@@ -209,31 +284,40 @@ class CocoVideoBoxClassification(VideoBoxClassification):
                     'boxes': {},
                     'color': next(video_colors[video])
                 }
-            step_index = int(
-                round(frame_index / video_info[video]['fps'] * annotation_fps))
+            step_index = frame_to_step[video][frame_index]
             boxes[video][track_id]['boxes'][str(step_index)] = box
 
-        self.video_steps = {}
-        for video, info in video_info.items():
-            frames_between_steps = int(round(info['fps'])) * annotation_fps
-            step_to_time = {}
-            step_frames = list(
-                range(0, math.ceil(info['duration'] * info['fps']),
-                      frames_between_steps))
-            for step, frame in enumerate(step_frames):
-                step_to_time[step] = frame / info['fps']
-            if 'I0' in video:
-                print('Duration', info['duration'], 'fps', info['fps'],
-                      'step frames', step_frames, 'len', len(step_frames))
-            self.video_steps[video] = step_to_time
+        # for video, info in video_info.items():
+        #     frames_between_steps = int(round(info['fps'])) * annotation_fps
+        #     step_to_time = {}
+        #     step_frames = list(
+        #         range(0, math.ceil(info['duration'] * info['fps']),
+        #               frames_between_steps))
+        #     for step, frame in enumerate(step_frames):
+        #         step_to_time[step] = frame / info['fps']
+        #     self.video_steps[video] = step_to_time
         super().__init__(root, boxes, labels_csv, output_dir, num_items,
                          extensions)
+
+    def public_directories(self):
+        return {
+            'file': self.root,
+            'frame': self.frames_root
+        }
 
     def update_template_args(self, template_kwargs):
         template_kwargs = template_kwargs.copy()
         template_kwargs['vocabulary'] = self.vocabulary
         template_kwargs = super().update_template_args(template_kwargs)
-        template_kwargs['video_steps'] = self.video_steps
+        keys = {x[0] for x in template_kwargs['to_label']}
+        template_kwargs['video_steps'] = {
+            k: self.video_steps[self.unescape_key(k)]
+            for k in keys
+        }
+        template_kwargs['video_step_frames'] = {
+            k: self.video_step_frames[self.unescape_key(k)]
+            for k in keys
+        }
         return template_kwargs
 
 
@@ -247,7 +331,7 @@ def get_video_info(video):
     }
 
 
-def colormap(rgb=False):
+def colormap(rgb=False, skip_grays=True):
     color_list = np.array(
         [
             0.000, 0.447, 0.741,
@@ -334,9 +418,12 @@ def colormap(rgb=False):
     color_list = color_list.reshape((-1, 3)) * 255
     if not rgb:
         color_list = color_list[:, ::-1]
+    if skip_grays:
+        grays = ((color_list[:, 0] == color_list[:, 1]) &
+                 (color_list[:, 1] == color_list[:, 2]))
+        color_list = color_list[~grays]
     color_list = [
         "#{0:02x}{1:02x}{2:02x}".format(r, g, b)
         for r, g, b in color_list.astype(int)
     ]
-    print(color_list[:10])
     return color_list
