@@ -24,6 +24,7 @@
   <form method='Post' action='/submit'>
   {% for (data_key, video_path, current_label) in to_label %}
   <div class='data-label-container' id='{{data_key}}'>
+    <h1>{{data_key}}</h1>
     <div class='to-label-container'>
       <div class='to-label-video-container'>
         <canvas tabindex='-1' class='box-overlay'></canvas>
