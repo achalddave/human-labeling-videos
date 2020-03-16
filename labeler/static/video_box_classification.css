@@ -33,8 +33,6 @@
 .to-label-video-container canvas {
     position: absolute;
     pointer-events: none;
-    border-top: solid 1px black;
-    border-bottom: solid 1px black;
     transform: translate(-50%, -50%);
     top: 50%;
     left: 50%;
