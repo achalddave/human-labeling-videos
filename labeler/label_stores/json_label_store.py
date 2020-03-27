@@ -46,6 +46,8 @@ class JsonLabelStore(LabelStore):
         self.extra_fields = extra_fields
         self.output = Path(output_json) if output_json is not None else None
         self.seed = seed
+        self.randomized_keys = list(self.keys)
+        random.Random(self.seed).shuffle(self.randomized_keys)
 
         if self.output is not None and self.output.exists():
             self._load_from_disk(self.output)
@@ -169,10 +171,12 @@ class JsonLabelStore(LabelStore):
         return {x['key'] for x in self.current_labels}
 
     def get_unlabeled(self, num_items, randomized=True):
-        unlabeled = natsorted(self.keys - self.labeled_keys())
         if randomized:
-            random.Random(self.seed).shuffle(unlabeled)
-        return unlabeled[:num_items]
+            keys = self.randomized_keys
+        else:
+            keys = natsorted(self.keys)
+        return [x for x in keys
+                if x not in set(self.labeled_keys())][:num_items]
 
     def num_completed(self):
         return len({x['key'] for x in self.current_labels} & set(self.keys))
