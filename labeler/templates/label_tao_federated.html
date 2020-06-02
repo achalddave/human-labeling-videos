@@ -1,0 +1,108 @@
+{% import "macros.html" as macros %}
+<!DOCTYPE html>
+<head>
+  {{ macros.js_includes() }}
+  {{ macros.css_includes() }}
+  <link rel='stylesheet' href='/static/single_video.css'>
+  <style type='text/css'>
+    table {
+      margin: 0 auto;
+    }
+    .labels {
+      /*height: 40%;*/
+      overflow-y: auto;
+    }
+    .data-label-container {
+      height: 90vh;
+    }
+    .to-label-container {
+      height: auto;
+      overflow: initial;
+    }
+
+    /*************/
+    /* dark mode */
+    /*************/
+    body, .active {
+      background-color: #222;
+      color: #eee;
+    }
+
+    .label-button {
+      background-color: #333;
+      color: #eee;
+    }
+
+    input[type='checkbox']:checked + .label-button-gray {
+      background: #eee;
+      color: #333;
+    }
+
+    .notes, .label-search {
+      background: #333;
+      border: solid 1px black;
+      color: white;
+    }
+  </style>
+  <script type='text/javascript'>
+  $(function() {
+    $('video').each(function() {
+      this.playbackRate=1.0;
+    });
+  });
+  </script>
+</head>
+<body>
+  {{ macros.progress(num_left, num_total, percent_complete) }}
+
+  <form method='Post' action='/submit'>
+  {% for (data_key, video_path, labels, current_label) in to_label %}
+  <div class='data-label-container' id='{{data_key}}'>
+    <div class='to-label-container'>
+      <div class='to-label-video-container'>
+        <video autoplay muted loop class='to-label' controls src={{video_path}}></video>
+      </div>
+    </div>
+    <div tabindex='0' class='labels'>
+      <table>
+      {% for label in labels %}
+      <tr>
+        <td title='{{label.description_long}}'>{{label.description_short}}</td>
+        <td>
+          <input name='{{data_key}}__{{label.idx}}+present'
+                  id='{{data_key}}__{{label.idx}}+present-id' type='checkbox'>
+          <label class='label-button label-button-gray'
+                 for='{{data_key}}__{{label.idx}}+present-id'>
+            Present
+          </label>
+        </td>
+        <td>
+          <input name='{{data_key}}__{{label.idx}}+absent'
+                  id='{{data_key}}__{{label.idx}}+absent-id' type='checkbox'>
+          <label class='label-button label-button-gray'
+                 for='{{data_key}}__{{label.idx}}+absent-id'>
+            Absent
+          </label>
+        </td>
+        <td>
+          <input name='{{data_key}}__{{label.idx}}+exhaustive'
+                  id='{{data_key}}__{{label.idx}}+exhaustive-id' type='checkbox'>
+          <label class='label-button label-button-green'
+                 for='{{data_key}}__{{label.idx}}+exhaustive-id'>
+            All labeled
+          </label>
+        </td>
+      </tr>
+      {% endfor %}
+      </table>
+      {{ macros.notes(data_key, current_label) }}
+    </div>
+  </div>
+  {% endfor %}
+  {{ macros.error_div() }}
+  {{ macros.submit() }}
+  </form>
+  <div id='preview-container'>
+  </div>
+</body>
+</html>
