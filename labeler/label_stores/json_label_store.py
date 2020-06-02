@@ -46,7 +46,7 @@ class JsonLabelStore(LabelStore):
         self.extra_fields = extra_fields
         self.output = Path(output_json) if output_json is not None else None
         self.seed = seed
-        self.randomized_keys = list(self.keys)
+        self.randomized_keys = natsorted(self.keys)
         random.Random(self.seed).shuffle(self.randomized_keys)
 
         if self.output is not None and self.output.exists():
